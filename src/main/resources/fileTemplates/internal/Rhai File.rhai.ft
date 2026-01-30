@@ -1,0 +1,19 @@
+// Rhai Script
+// Created: ${DATE} ${TIME}
+// Author: ${USER}
+
+// Your Rhai code here
+print("Hello from Rhai!");
+
+// Functions
+fn greet(name) {
+    print("Hello, " + name + "!");
+}
+
+// Variables
+let x = 42;
+let message = "Rhai is awesome!";
+
+// Main execution
+greet("World");
+print(x * 2);

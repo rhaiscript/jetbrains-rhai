@@ -1,0 +1,56 @@
+<idea-plugin>
+    <id>org.rhai.rhai-highlight-plugin</id>
+
+    <name>Rhai-Highlight</name>
+
+    <vendor email="gleb.mikhailov.04@gmail.com" url="www.linkedin.com/in/gleb-mikhailov">Gleb Mikhailov</vendor>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <internalFileTemplate name="Rhai File.rhai"/>
+
+        <fileType name="Rhai File"
+                  implementationClass="org.rhai.RhaiFileType"
+                  fieldName="INSTANCE"
+                  language="Rhai"
+                  extensions="rhai"/>
+
+        <lang.parserDefinition language="Rhai"
+                               implementationClass="org.rhai.RhaiParserDefinition"/>
+
+        <lang.syntaxHighlighterFactory language="Rhai"
+                                       implementationClass="org.rhai.RhaiSyntaxHighlighterFactory"/>
+
+        <lang.commenter language="Rhai" implementationClass="org.rhai.RhaiCommenter"/>
+        <lang.braceMatcher language="Rhai" implementationClass="org.rhai.RhaiBraceMatcher"/>
+        <lang.formatter language="Rhai" implementationClass="org.rhai.RhaiFormatter"/>
+
+        <lang.findUsagesProvider language="Rhai"
+                                 implementationClass="org.rhai.RhaiFindUsagesProvider"/>
+        <completion.contributor language="Rhai"
+                                implementationClass="org.rhai.RhaiCompletionContributor"/>
+        <annotator language="Rhai" implementationClass="org.rhai.RhaiAnnotator"/>
+        <psi.referenceContributor language="Rhai"
+                                  implementationClass="org.rhai.RhaiReferenceContributor"/>
+        <lang.documentationProvider language="Rhai"
+                                    implementationClass="org.rhai.RhaiDocumentationProvider"/>
+        <lang.psiStructureViewFactory language="Rhai"
+                                      implementationClass="org.rhai.RhaiStructureViewFactory"/>
+
+        <projectService serviceImplementation="org.rhai.RhaiSettings"/>
+
+        <fileTemplateGroup implementation="org.rhai.file.RhaiTemplatesProvider"/>
+
+    </extensions>
+
+    <actions>
+        <group id="Rhai.NewFileGroup" text="Rhai" description="Rhai actions" icon="/icons/icon.svg">
+            <add-to-group group-id="NewGroup" anchor="after" relative-to-action="NewFile"/>
+            <action id="Rhai.CreateFile"
+                    class="org.rhai.file.CreateRhaiFileAction"
+                    text="Rhai Script"
+                    description="Create new Rhai script"
+                    icon="/icons/icon.svg">
+            </action>
+        </group>
+    </actions>
+</idea-plugin>
