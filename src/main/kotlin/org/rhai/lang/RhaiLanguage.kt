@@ -1,4 +1,4 @@
-package org.rhai
+package org.rhai.lang
 
 import com.intellij.lang.Language
 

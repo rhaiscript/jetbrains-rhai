@@ -1,4 +1,4 @@
-package org.rhai
+package org.rhai.highlighting
 
 import com.intellij.lexer.Lexer
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors
@@ -8,6 +8,7 @@ import com.intellij.openapi.fileTypes.SyntaxHighlighterBase
 import com.intellij.psi.TokenType
 import com.intellij.psi.tree.IElementType
 import org.rhai.RhaiTypes
+import org.rhai.lexer.RhaiHighlightingLexer
 
 class RhaiSyntaxHighlighter : SyntaxHighlighterBase() {
     companion object {
@@ -43,7 +44,7 @@ class RhaiSyntaxHighlighter : SyntaxHighlighterBase() {
         )
     }
 
-    override fun getHighlightingLexer(): Lexer = RsHighlightingLexer()
+    override fun getHighlightingLexer(): Lexer = RhaiHighlightingLexer()
 
     override fun getTokenHighlights(tokenType: IElementType): Array<TextAttributesKey> {
         return when (tokenType) {

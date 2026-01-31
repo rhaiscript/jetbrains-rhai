@@ -1,4 +1,4 @@
-package org.rhai
+package org.rhai.features
 
 import com.intellij.lang.BracePair
 import com.intellij.lang.PairedBraceMatcher

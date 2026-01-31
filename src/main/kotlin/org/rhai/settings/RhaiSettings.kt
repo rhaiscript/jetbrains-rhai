@@ -1,4 +1,4 @@
-package org.rhai
+package org.rhai.settings
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.PersistentStateComponent

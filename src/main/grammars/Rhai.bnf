@@ -9,8 +9,8 @@
   psiImplPackage="org.rhai.impl"
 
   elementTypeHolderClass="org.rhai.RhaiTypes"
-  elementTypeClass="org.rhai.RhaiElementType"
-  tokenTypeClass="org.rhai.RhaiTokenType"
+  elementTypeClass="org.rhai.psi.RhaiElementType"
+  tokenTypeClass="org.rhai.psi.RhaiTokenType"
 
   consumeTokenMethod(".*")="consumeToken"
 

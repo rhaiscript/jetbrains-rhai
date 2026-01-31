@@ -1,4 +1,4 @@
-package org.rhai
+package org.rhai.highlighting
 
 import com.intellij.openapi.fileTypes.SyntaxHighlighter
 import com.intellij.openapi.fileTypes.SyntaxHighlighterFactory

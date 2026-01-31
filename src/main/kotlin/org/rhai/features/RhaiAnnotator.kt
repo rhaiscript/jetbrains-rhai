@@ -1,10 +1,11 @@
-package org.rhai
+package org.rhai.features
 
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.psi.PsiElement
-import org.rhai.RhaiTypes
+import org.rhai.*
+import org.rhai.highlighting.RhaiSyntaxHighlighter
 
 class RhaiAnnotator : Annotator {
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
@@ -12,10 +13,8 @@ class RhaiAnnotator : Annotator {
         when (element.node?.elementType) {
             RhaiTypes.IDENTIFIER, RhaiTypes.BUILTIN -> {
                 val parent = element.parent
-                
-                // Определение функции: fn identifier(...)
+
                 if (parent is RhaiFunctionDefinition) {
-                    // Проверяем, что это идентификатор после 'fn'
                     var foundFn = false
                     for (sibling in parent.children) {
                         when (sibling.node?.elementType) {
@@ -24,6 +23,7 @@ class RhaiAnnotator : Annotator {
                                 foundFn = true
                                 continue
                             }
+
                             RhaiTypes.IDENTIFIER -> {
                                 if (foundFn && sibling == element) {
                                     holder.newSilentAnnotation(HighlightSeverity.INFORMATION)
@@ -33,11 +33,12 @@ class RhaiAnnotator : Annotator {
                                     return
                                 }
                             }
+
                             RhaiTypes.LPAREN -> break
                         }
                     }
                 }
-                
+
                 // Вызов функции: identifier(...) или BUILTIN(...)
                 if (parent is RhaiPrimaryExpr) {
                     val grandParent = parent.parent
@@ -51,7 +52,7 @@ class RhaiAnnotator : Annotator {
                         }
                     }
                 }
-                
+
                 // Вызов функции через path_expression: std::foo::bar(...)
                 if (parent is RhaiPathExpression) {
                     val pathParent = parent.parent
@@ -61,8 +62,8 @@ class RhaiAnnotator : Annotator {
                             val postfixOps = grandParent.postfixOpList
                             if (postfixOps.isNotEmpty() && postfixOps[0].argumentList != null) {
                                 // Подсвечиваем только последний идентификатор в path
-                                val identifiers = parent.children.filter { 
-                                    it.node?.elementType == RhaiTypes.IDENTIFIER 
+                                val identifiers = parent.children.filter {
+                                    it.node?.elementType == RhaiTypes.IDENTIFIER
                                 }
                                 if (identifiers.isNotEmpty() && identifiers.last() == element) {
                                     holder.newSilentAnnotation(HighlightSeverity.INFORMATION)
@@ -76,7 +77,7 @@ class RhaiAnnotator : Annotator {
                 }
             }
         }
-        
+
         // Также проверяем определения функций на верхнем уровне
         if (element is RhaiFunctionDefinition) {
             var foundFn = false
@@ -87,6 +88,7 @@ class RhaiAnnotator : Annotator {
                         foundFn = true
                         continue
                     }
+
                     RhaiTypes.IDENTIFIER -> {
                         if (foundFn) {
                             holder.newSilentAnnotation(HighlightSeverity.INFORMATION)
@@ -96,6 +98,7 @@ class RhaiAnnotator : Annotator {
                             return
                         }
                     }
+
                     RhaiTypes.LPAREN -> break
                 }
             }

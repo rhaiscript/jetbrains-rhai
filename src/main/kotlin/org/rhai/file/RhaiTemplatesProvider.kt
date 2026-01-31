@@ -2,7 +2,7 @@ package org.rhai.file
 
 import com.intellij.ide.fileTemplates.FileTemplateGroupDescriptor
 import com.intellij.ide.fileTemplates.FileTemplateGroupDescriptorFactory
-import org.rhai.RhaiIcons
+import org.rhai.lang.RhaiIcons
 
 class RhaiTemplatesProvider : FileTemplateGroupDescriptorFactory {
     override fun getFileTemplatesDescriptor(): FileTemplateGroupDescriptor {

@@ -1,4 +1,4 @@
-package org.rhai
+package org.rhai.parser
 
 import com.intellij.lang.ASTNode
 import com.intellij.lang.ParserDefinition
@@ -12,6 +12,10 @@ import com.intellij.psi.TokenType
 import com.intellij.psi.tree.IFileElementType
 import com.intellij.psi.tree.TokenSet
 import org.rhai.RhaiTypes
+import org.rhai.RhaiParser
+import org.rhai.lang.RhaiLanguage
+import org.rhai.lang.RhaiFile
+import org.rhai.RhaiFlexAdapter
 
 class RhaiParserDefinition : ParserDefinition {
     companion object {
@@ -25,7 +29,7 @@ class RhaiParserDefinition : ParserDefinition {
         )
     }
 
-    override fun createLexer(project: Project): Lexer = RsLexer()
+    override fun createLexer(project: Project): Lexer = RhaiFlexAdapter()
     override fun createParser(project: Project): PsiParser = RhaiParser()
     override fun getFileNodeType(): IFileElementType = FILE
     override fun getWhitespaceTokens(): TokenSet = WHITE_SPACES

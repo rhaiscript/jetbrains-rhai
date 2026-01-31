@@ -1,4 +1,4 @@
-package org.rhai
+package org.rhai.features
 
 import com.intellij.lang.documentation.DocumentationProvider
 import com.intellij.psi.PsiElement

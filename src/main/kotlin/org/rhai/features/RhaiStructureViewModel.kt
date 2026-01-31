@@ -1,4 +1,4 @@
-package org.rhai
+package org.rhai.features
 
 import com.intellij.ide.structureView.StructureViewTreeElement
 import com.intellij.ide.structureView.TextEditorBasedStructureViewModel

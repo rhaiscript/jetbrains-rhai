@@ -1,4 +1,4 @@
-package org.rhai
+package org.rhai.lang
 
 import com.intellij.extapi.psi.PsiFileBase
 import com.intellij.openapi.fileTypes.FileType

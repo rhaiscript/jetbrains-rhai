@@ -1,4 +1,4 @@
-package org.rhai
+package org.rhai.features
 
 import com.intellij.formatting.*
 import com.intellij.lang.ASTNode
@@ -6,6 +6,7 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.codeStyle.CodeStyleSettings
 import com.intellij.psi.formatter.FormatterUtil
 import org.rhai.RhaiTypes
+import org.rhai.lang.RhaiLanguage
 
 class RhaiFormatter : FormattingModelBuilder {
     override fun createModel(formattingContext: FormattingContext): FormattingModel {

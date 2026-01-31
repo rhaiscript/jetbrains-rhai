@@ -1,4 +1,4 @@
-package org.rhai
+package org.rhai.features
 
 import com.intellij.lang.findUsages.FindUsagesProvider
 import com.intellij.psi.PsiElement

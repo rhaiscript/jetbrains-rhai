@@ -9,34 +9,34 @@
         <internalFileTemplate name="Rhai File.rhai"/>
 
         <fileType name="Rhai File"
-                  implementationClass="org.rhai.RhaiFileType"
+                  implementationClass="org.rhai.lang.RhaiFileType"
                   fieldName="INSTANCE"
                   language="Rhai"
                   extensions="rhai"/>
 
         <lang.parserDefinition language="Rhai"
-                               implementationClass="org.rhai.RhaiParserDefinition"/>
+                               implementationClass="org.rhai.parser.RhaiParserDefinition"/>
 
         <lang.syntaxHighlighterFactory language="Rhai"
-                                       implementationClass="org.rhai.RhaiSyntaxHighlighterFactory"/>
+                                       implementationClass="org.rhai.highlighting.RhaiSyntaxHighlighterFactory"/>
 
-        <lang.commenter language="Rhai" implementationClass="org.rhai.RhaiCommenter"/>
-        <lang.braceMatcher language="Rhai" implementationClass="org.rhai.RhaiBraceMatcher"/>
-        <lang.formatter language="Rhai" implementationClass="org.rhai.RhaiFormatter"/>
+        <lang.commenter language="Rhai" implementationClass="org.rhai.features.RhaiCommenter"/>
+        <lang.braceMatcher language="Rhai" implementationClass="org.rhai.features.RhaiBraceMatcher"/>
+        <lang.formatter language="Rhai" implementationClass="org.rhai.features.RhaiFormatter"/>
 
         <lang.findUsagesProvider language="Rhai"
-                                 implementationClass="org.rhai.RhaiFindUsagesProvider"/>
+                                 implementationClass="org.rhai.features.RhaiFindUsagesProvider"/>
         <completion.contributor language="Rhai"
-                                implementationClass="org.rhai.RhaiCompletionContributor"/>
-        <annotator language="Rhai" implementationClass="org.rhai.RhaiAnnotator"/>
+                                implementationClass="org.rhai.features.RhaiCompletionContributor"/>
+        <annotator language="Rhai" implementationClass="org.rhai.features.RhaiAnnotator"/>
         <psi.referenceContributor language="Rhai"
-                                  implementationClass="org.rhai.RhaiReferenceContributor"/>
+                                  implementationClass="org.rhai.features.RhaiReferenceContributor"/>
         <lang.documentationProvider language="Rhai"
-                                    implementationClass="org.rhai.RhaiDocumentationProvider"/>
+                                    implementationClass="org.rhai.features.RhaiDocumentationProvider"/>
         <lang.psiStructureViewFactory language="Rhai"
-                                      implementationClass="org.rhai.RhaiStructureViewFactory"/>
+                                      implementationClass="org.rhai.features.RhaiStructureViewFactory"/>
 
-        <projectService serviceImplementation="org.rhai.RhaiSettings"/>
+        <projectService serviceImplementation="org.rhai.settings.RhaiSettings"/>
 
         <fileTemplateGroup implementation="org.rhai.file.RhaiTemplatesProvider"/>
 
