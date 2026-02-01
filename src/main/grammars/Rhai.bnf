@@ -14,13 +14,22 @@
   consumeTokenMethod(".*")="consumeToken"
 
   tokens = [
-    // Скобки
+    // Скобки и пунктуация
     LPAREN='('
     RPAREN=')'
     LBRACKET='['
     RBRACKET=']'
     LBRACE='{'
     RBRACE='}'
+    SEMICOLON=';'
+    COMMA=','
+    DOT='.'
+    COLON=':'
+    QUESTION='?'
+    AT='@'
+    HASH='#'
+    DOLLAR='$'
+    TILDE='~'
 
     // Операторы
     PLUS='+'
@@ -28,34 +37,32 @@
     MUL='*'
     DIV='/'
     MOD='%'
-    ASSIGN='='
     NOT='!'
+    ASSIGN='='
+    LT='<'
+    GT='>'
     BAND='&'
     BOR='|'
     BXOR='^'
-    LT='<'
-    GT='>'
-    DOT='.'
-    COLON=':'
-    SEMICOLON=';'
-    COMMA=','
-    QUESTION='?'
-    AT='@'
 
     // Составные операторы
     ARROW='=>'
+    THIN_ARROW='->'
+    LEFT_ARROW='<-'
     DOUBLE_COLON='::'
     POW='**'
     RANGE='..'
+    DOT_DOT_EQ='..='
     NULL_COALESCING='??'
-    SHL_ASSIGN='<<='
-    SHR_ASSIGN='>>='
+    SPACESHIP='<=>'
     SHL='<<'
     SHR='>>'
     LE='<='
     GE='>='
     EQ='=='
     NE='!='
+    AND='&&'
+    OR='||'
     PLUS_ASSIGN='+='
     MINUS_ASSIGN='-='
     MUL_ASSIGN='*='
@@ -64,12 +71,14 @@
     AND_ASSIGN='&='
     OR_ASSIGN='|='
     XOR_ASSIGN='^='
-    AND='&&'
-    OR='||'
+    SHL_ASSIGN='<<='
+    SHR_ASSIGN='>>='
+    POW_ASSIGN='**='
 
     // Ключевые слова
     FN='fn'
     PRIVATE='private'
+    PUB='pub'
     CONST='const'
     LET='let'
     IF='if'
@@ -99,80 +108,79 @@
     FALSE='false'
     NULL='null'
     UNDEF='undefined'
+    SHARED='shared'
+    SYNC='sync'
+    ASYNC='async'
+    AWAIT='await'
+    INF='inf'
+    NEG_INF='-inf'
+    NAN='NaN'
 
-    // Литералы
-    INTEGER='INTEGER'
-    FLOAT='FLOAT'
-    STRING='STRING'
-    RAW_STRING='RAW_STRING'
-    MULTILINE_STRING='MULTILINE_STRING'
-    CHAR_LITERAL='CHAR_LITERAL'
-    REGEX_LITERAL='REGEX_LITERAL'
-    IDENTIFIER='identifier'
-    SHEBANG_TOKEN='SHEBANG_TOKEN'
+    // Динамические токены
+    IDENTIFIER
+    INTEGER_LITERAL
+    FLOAT_LITERAL
+    STRING_LITERAL
+    RAW_STRING_LITERAL
+    MULTILINE_STRING_LITERAL
+    CHAR_LITERAL
+    REGEX_LITERAL
+    SHEBANG
+    BUILTIN
+    INTERPOLATED_TEXT
 
     // Комментарии
-    BLOCK_COMMENT='BLOCK_COMMENT'
-    DOC_COMMENT='DOC_COMMENT'
-    DOC_LINE='DOC_LINE'
-    LINE_COMMENT='LINE_COMMENT'
+    LINE_COMMENT
+    BLOCK_COMMENT
+    DOC_COMMENT
+    DOC_LINE
 
     // Интерполированные строки
     INTERPOLATED_START='`'
     INTERPOLATED_END='`'
     INTERPOLATED_EXPR_START='${'
     INTERPOLATED_EXPR_END='}'
-    INTERPOLATED_TEXT='INTERPOLATED_TEXT'
 
-    // Атрибуты
-    HASH='#'
-    LBRACKET='['
-    RBRACKET=']'
-
-    // Прочие
-    BUILTIN='BUILTIN'
-    RESERVED='RESERVED'
-    INVALID_OP='INVALID_OP'
-    INVALID_ESCAPE='INVALID_ESCAPE'
+    // Bad character
+    BAD_CHARACTER
   ]
 }
 
-// Основная структура файла
-rhaiFile ::= shebang? (attribute_list? top_level_item)*
+// === Грамматика ===
+
+rhaiFile ::= SHEBANG? (attribute_list? top_level_item)*
 
 private top_level_item ::= module_declaration
                          | function_definition
                          | import_statement
                          | export_statement
                          | statement
-                         | ';'
-
-shebang ::= SHEBANG_TOKEN
+                         | SEMICOLON
 
 // Атрибуты
-attribute_list ::= '#' '[' attribute (',' attribute)* ']'
-attribute ::= IDENTIFIER ('(' literal (',' literal)* ')')?
+attribute_list ::= HASH LBRACKET attribute (COMMA attribute)* RBRACKET
+attribute ::= IDENTIFIER (LPAREN literal_value (COMMA literal_value)* RPAREN)?
 
 // Модули
-module_declaration ::= 'module' IDENTIFIER '{' top_level_item* '}'
+module_declaration ::= MODULE IDENTIFIER LBRACE top_level_item* RBRACE
 
 // Import/Export
-import_statement ::= 'import' import_path ('as' IDENTIFIER)? ';'?
-                   | 'import' import_path '::' '*' ';'?
-                   | 'import' string_literal 'as' IDENTIFIER ';'?
+import_statement ::= IMPORT import_path (AS IDENTIFIER)? SEMICOLON?
+                   | IMPORT import_path DOUBLE_COLON MUL SEMICOLON?
+                   | IMPORT string_expr AS IDENTIFIER SEMICOLON?
 
-import_path ::= IDENTIFIER ('::' IDENTIFIER)*
+import_path ::= IDENTIFIER (DOUBLE_COLON IDENTIFIER)*
 
-export_statement ::= 'export' (function_definition | const_declaration | let_declaration | 'module' IDENTIFIER)
+export_statement ::= EXPORT (function_definition | const_declaration | let_declaration | MODULE IDENTIFIER)
 
 // Function definition
-function_definition ::= attribute_list? visibility? 'fn' IDENTIFIER '(' parameters? ')' return_type? (block | ';')
-visibility ::= 'private' | 'pub'
-return_type ::= '->' type_annotation
+function_definition ::= attribute_list? visibility? FN IDENTIFIER LPAREN parameters? RPAREN return_type? (block | SEMICOLON)
+visibility ::= PRIVATE | PUB
+return_type ::= ARROW type_annotation
 
-parameters ::= parameter (',' parameter)* ','?
-parameter ::= pattern (':' type_annotation)?
-type_annotation ::= type_name ('<' type_annotation (',' type_annotation)* '>')?
+parameters ::= parameter (COMMA parameter)* COMMA?
+parameter ::= pattern (COLON type_annotation)?
+type_annotation ::= type_name (LT type_annotation (COMMA type_annotation)* GT)?
 type_name ::= 'int' | 'float' | 'bool' | 'string' | 'Array' | 'Map' | 'Fn' | IDENTIFIER
 
 // Statements
@@ -195,105 +203,99 @@ statement ::= let_declaration
             | block
 
 // Variable declarations
-let_declaration ::= 'let' pattern (':' type_annotation)? ('=' expression)? ';'?
-const_declaration ::= 'const' pattern (':' type_annotation)? ('=' expression)? ';'?
+let_declaration ::= LET pattern (COLON type_annotation)? (ASSIGN expression)? SEMICOLON?
+const_declaration ::= CONST pattern (COLON type_annotation)? (ASSIGN expression)? SEMICOLON?
 pattern ::= IDENTIFIER
           | '_'
-          | literal
-          | '[' pattern (',' pattern)* ']'
-          | '{' field_pattern (',' field_pattern)* '}'
-field_pattern ::= IDENTIFIER (':' pattern)?
+          | literal_value
+          | LBRACKET pattern (COMMA pattern)* RBRACKET
+          | LBRACE field_pattern (COMMA field_pattern)* RBRACE
+field_pattern ::= IDENTIFIER (COLON pattern)?
 
 // Labeled statements
-labeled_statement ::= label ':' statement
-label ::= IDENTIFIER | string_literal
+labeled_statement ::= label COLON statement
+label ::= IDENTIFIER | string_expr
 
 // Control flow
-if_statement ::= 'if' expression block ('else' (if_statement | block))?
-switch_expression ::= 'switch' expression '{' switch_arm* default_arm? '}'
-switch_arm ::= pattern (',' pattern)* ('if' expression)? '=>' (expression | block) ','?
-default_arm ::= 'default' '=>' (expression | block) ','?
+if_statement ::= IF expression block (ELSE (if_statement | block))?
+switch_expression ::= SWITCH expression LBRACE switch_arm* default_arm? RBRACE
+switch_arm ::= pattern (COMMA pattern)* (IF expression)? ARROW (expression | block) COMMA?
+default_arm ::= DEFAULT ARROW (expression | block) COMMA?
 
-while_statement ::= 'while' expression block
-do_while_statement ::= 'do' block 'while' expression ';'?
-until_statement ::= 'until' expression block
-loop_statement ::= 'loop' block
-for_statement ::= 'for' pattern 'in' expression block
+while_statement ::= WHILE expression block
+do_while_statement ::= DO block WHILE expression SEMICOLON?
+until_statement ::= UNTIL expression block
+loop_statement ::= LOOP block
+for_statement ::= FOR pattern IN expression block
 
-break_statement ::= 'break' (expression | IDENTIFIER)? ';'?
-continue_statement ::= 'continue' ';'?
-return_statement ::= 'return' expression? ';'?
-throw_statement ::= 'throw' expression ';'?
-try_catch_statement ::= 'try' block ('catch' '(' pattern ')' block)+
+break_statement ::= BREAK (expression | IDENTIFIER)? SEMICOLON?
+continue_statement ::= CONTINUE SEMICOLON?
+return_statement ::= RETURN expression? SEMICOLON?
+throw_statement ::= THROW expression SEMICOLON?
+try_catch_statement ::= TRY block (CATCH LPAREN pattern RPAREN block)+
 
-block ::= '{' statement* '}'
+block ::= LBRACE statement* RBRACE
 
-// Expressions (правильная иерархия приоритетов)
-expression ::= null_coalescing_expr
+// Literals (ЗДЕСЬ БЫЛО string_literal, СТАЛО string_expr)
+literal_value ::= INTEGER_LITERAL
+                | FLOAT_LITERAL
+                | string_expr
+                | CHAR_LITERAL
+                | boolean_literal
+                | REGEX_LITERAL
 
-// Null coalescing (низший приоритет)
-null_coalescing_expr ::= assignment_expr ('??' assignment_expr)*
+// Правило переименовано из string_literal в string_expr, чтобы избежать
+// конфликта с токеном STRING_LITERAL (Grammar Kit создает константу для правила в верхнем регистре)
+string_expr ::= STRING_LITERAL | RAW_STRING_LITERAL | MULTILINE_STRING_LITERAL
+boolean_literal ::= TRUE | FALSE
 
-// Assignment (правой ассоциативности)
-assignment_expr ::= lambda_expr (assignment_op assignment_expr)?
-assignment_op ::= '=' | '+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '|=' | '^=' | '<<=' | '>>='
+// Expressions
+expression ::= assignment_expr
 
-// Lambda expressions
-lambda_expr ::= '|' closure_params? '|' '=>' expression
-              | conditional_expr
+assignment_expr ::= null_coalescing_expr assignment_rest?
+assignment_rest ::= assignment_op assignment_expr
+assignment_op ::= ASSIGN | PLUS_ASSIGN | MINUS_ASSIGN | MUL_ASSIGN | DIV_ASSIGN | MOD_ASSIGN | AND_ASSIGN | OR_ASSIGN | XOR_ASSIGN | SHL_ASSIGN | SHR_ASSIGN | POW_ASSIGN
 
-// Conditional (тернарный оператор)
-conditional_expr ::= logical_or_expr ('?' expression ':' conditional_expr)?
+null_coalescing_expr ::= conditional_expr (NULL_COALESCING conditional_expr)*
 
-// Logical OR/AND
-logical_or_expr ::= logical_and_expr ('||' logical_and_expr)*
-logical_and_expr ::= equality_expr ('&&' equality_expr)*
+conditional_expr ::= logical_or_expr (QUESTION expression COLON conditional_expr)?
 
-// Equality/Relational
-equality_expr ::= relational_expr (('==' | '!=') relational_expr)*
-relational_expr ::= range_expr (('<' | '>' | '<=' | '>=' | 'is' | '!is') range_expr)*
+logical_or_expr ::= logical_and_expr (OR logical_and_expr)*
+logical_and_expr ::= equality_expr (AND equality_expr)*
 
-// Range operator
-range_expr ::= bitwise_or_expr ('..' bitwise_or_expr)?
+equality_expr ::= relational_expr ((EQ | NE) relational_expr)*
+relational_expr ::= range_expr ((LT | GT | LE | GE | IS | NOT IS) range_expr)*
 
-// Bitwise
-bitwise_or_expr ::= bitwise_xor_expr ('|' bitwise_xor_expr)*
-bitwise_xor_expr ::= bitwise_and_expr ('^' bitwise_and_expr)*
-bitwise_and_expr ::= shift_expr ('&' shift_expr)*
+range_expr ::= bitwise_or_expr (RANGE bitwise_or_expr (DOT_DOT_EQ bitwise_or_expr)?)?
 
-// Shift
-shift_expr ::= additive_expr (('<<' | '>>') additive_expr)*
+bitwise_or_expr ::= bitwise_xor_expr (BOR bitwise_xor_expr)*
+bitwise_xor_expr ::= bitwise_and_expr (BXOR bitwise_and_expr)*
+bitwise_and_expr ::= shift_expr (BAND shift_expr)*
 
-// Additive/Multiplicative
-additive_expr ::= multiplicative_expr (('+' | '-') multiplicative_expr)*
-multiplicative_expr ::= power_expr (('*' | '/' | '%') power_expr)*
+shift_expr ::= additive_expr ((SHL | SHR) additive_expr)*
 
-// Power (правой ассоциативности) - исправлено
-power_expr ::= unary_expr ('**' power_expr)*
+additive_expr ::= multiplicative_expr ((PLUS | MINUS) multiplicative_expr)*
+multiplicative_expr ::= power_expr ((MUL | DIV | MOD) power_expr)*
 
-// Unary
-unary_expr ::= ('!' | '-' | '+' | '*' | '&' | '?')* postfix_expr
+power_expr ::= unary_expr (POW power_expr)?
 
-// Postfix: calls, indexing, field access
+unary_expr ::= (NOT | MINUS | PLUS | MUL | BAND | QUESTION)* postfix_expr
+
 postfix_expr ::= primary_expr postfix_op*
-postfix_op ::= '(' argument_list? ')' '?'?           // fn()? - optional call
-             | '.' IDENTIFIER ('?' | '!')?           // field access with optional/null
-             | '[' expression ']' ('?' | '!')?       // index with optional/null
-             | '?'                                   // error propagation
-             | '!'                                   // non-null assertion
+postfix_op ::= LPAREN argument_list? RPAREN QUESTION?
+             | DOT IDENTIFIER (QUESTION | NOT)?
+             | LBRACKET expression RBRACKET (QUESTION | NOT)?
+             | QUESTION
 
-argument_list ::= expression (',' expression)* ','?
+argument_list ::= expression (COMMA expression)* COMMA?
 
-// Primary expressions
-primary_expr ::= literal
+primary_expr ::= literal_value
                | IDENTIFIER
                | BUILTIN
                | path_expression
-               | 'this'
-               | 'global'
-               | 'null'
-               | 'undefined'
-               | '(' expression? ')'                 // grouping или unit
+               | THIS
+               | GLOBAL
+               | LPAREN expression? RPAREN
                | array_literal
                | object_literal
                | closure_expr
@@ -301,59 +303,36 @@ primary_expr ::= literal
                | switch_expression
                | macro_invocation
 
-// Path expressions
-path_expression ::= IDENTIFIER ('::' IDENTIFIER)+
+path_expression ::= IDENTIFIER (DOUBLE_COLON IDENTIFIER)+
 
-// Literals
-literal ::= numeric_literal
-          | string_literal
-          | char_literal
-          | boolean_literal
-          | regex_literal
+array_literal ::= LBRACKET array_elements? RBRACKET
+array_elements ::= expression (COMMA expression)* COMMA?
+                  | expression SEMICOLON expression
 
-numeric_literal ::= INTEGER | FLOAT
-string_literal ::= STRING | RAW_STRING | MULTILINE_STRING
-char_literal ::= CHAR_LITERAL
-boolean_literal ::= 'true' | 'false'
-regex_literal ::= REGEX_LITERAL
-
-// Array literals
-array_literal ::= '[' array_elements? ']'
-array_elements ::= expression (',' expression)* ','?
-                  | expression (';' expression)?     // [0; 10] - repeat
-
-// Object literals
-object_literal ::= '{' object_fields? '}'
-object_fields ::= object_field (',' object_field)* ','?
-object_field ::= (IDENTIFIER | string_literal | computed_property) ':' expression
+object_literal ::= LBRACE object_fields? RBRACE
+object_fields ::= object_field (COMMA object_field)* COMMA?
+object_field ::= (IDENTIFIER | string_expr | computed_property) COLON expression
                | spread_expr
-computed_property ::= '[' expression ']'
+computed_property ::= LBRACKET expression RBRACKET
 spread_expr ::= '...' expression
 
-// Closures
-closure_expr ::= attribute_list? '|' closure_params? '|' closure_body
-closure_params ::= closure_param (',' closure_param)* ','?
-closure_param ::= pattern (':' type_annotation)?
-closure_body ::= '=>' expression | block
+closure_expr ::= BOR closure_params? BOR (ARROW expression | block)
+closure_params ::= closure_param (COMMA closure_param)* COMMA?
+closure_param ::= pattern (COLON type_annotation)?
 
-// Interpolated strings
-interpolated_string ::= '`' interpolated_part* '`'
+interpolated_string ::= INTERPOLATED_START interpolated_part* INTERPOLATED_END
 interpolated_part ::= INTERPOLATED_TEXT
-                    | INTERPOLATED_EXPR_START expression '}'
+                    | INTERPOLATED_EXPR_START expression INTERPOLATED_EXPR_END
 
-// Макросы
-macro_invocation ::= IDENTIFIER '!' macro_input
-macro_input ::= '(' macro_args? ')'
-              | '[' macro_args? ']'
-              | '{' macro_args? '}'
-              | token_tree
-macro_args ::= macro_arg (',' macro_arg)* ','?
-macro_arg ::= expression | IDENTIFIER ':' expression
-token_tree ::= token_tree_token+
-token_tree_token ::= IDENTIFIER | literal | '(' token_tree ')' | '[' token_tree ']' | '{' token_tree '}'
+macro_invocation ::= IDENTIFIER NOT macro_input?
+macro_input ::= LPAREN macro_args? RPAREN
+              | LBRACKET macro_args? RBRACKET
+              | LBRACE macro_args? RBRACE
+macro_args ::= macro_arg (COMMA macro_arg)* COMMA?
+macro_arg ::= expression | IDENTIFIER COLON expression
 
-// Expression statement
-expression_statement ::= expression ';'?
+expression_statement ::= expression SEMICOLON?
 
-// Error recovery rules
-recover_while ::= !(';' | '}' | ')' | ']' | EOF)
+// Dummy правила для генерации токенов
+private dummy_comment_tokens ::= LINE_COMMENT | BLOCK_COMMENT | DOC_COMMENT | DOC_LINE
+private dummy_bad_char ::= BAD_CHARACTER
