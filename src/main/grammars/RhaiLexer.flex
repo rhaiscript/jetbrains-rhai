@@ -4,6 +4,7 @@ import com.intellij.lexer.FlexLexer;
 import com.intellij.psi.tree.IElementType;
 import static org.rhai.RhaiTypes.*;
 import com.intellij.psi.TokenType;
+import java.util.Stack;
 
 %%
 
@@ -12,263 +13,321 @@ import com.intellij.psi.TokenType;
 %unicode
 %function advance
 %type IElementType
+%eof{
+    return;
+%eof}
 %line
 %column
+%char
 
-// Enable exclusive states for strings to avoid ambiguity
-%state IN_STRING, IN_INTERPOLATED, IN_INTERPOLATED_EXPR
+// Состояния
+%state IN_STRING, IN_INTERPOLATED_STRING
 %xstate IN_BLOCK_COMMENT, IN_DOC_COMMENT
 
-// User code copied into the generated class
+// Стек состояний для вложенных интерполяций и строк
 %{
-  private int braceDepth = 0;
-  private int yyline = 0;
-  private int yycolumn = 0;
+    private final Stack<Integer> stateStack = new Stack<>();
+    private final Stack<Integer> braceStack = new Stack<>();
+
+    private void pushState(int state) {
+        stateStack.push(yystate());
+        yybegin(state);
+    }
+
+    private void popState() {
+        if (!stateStack.isEmpty()) {
+            yybegin(stateStack.pop());
+        } else {
+            yybegin(YYINITIAL);
+        }
+    }
+
+    private void pushBrace() {
+        if (!braceStack.isEmpty()) {
+            braceStack.push(braceStack.pop() + 1);
+        } else {
+            braceStack.push(1);
+        }
+    }
+
+    private void popBrace() {
+        if (!braceStack.isEmpty()) {
+            int depth = braceStack.pop() - 1;
+            if (depth > 0) {
+                braceStack.push(depth);
+            }
+        }
+    }
+
+    private boolean inInterpolation() {
+        return !braceStack.isEmpty() && braceStack.peek() > 0;
+    }
 %}
 
-// --- Macros ---
+// === Макросы ===
 
-// Whitespace
-WHITE_SPACE = [ \t\f\n\r]+
+// Пробельные символы
+WHITE_SPACE     = [ \t\f]+
+LINE_TERMINATOR = \r|\n|\r\n
 
-// Line breaks (for line counting)
-LINE_BREAK  = \r|\n|\r\n
+// Идентификаторы
+IDENTIFIER      = [_a-zA-Z][_a-zA-Z0-9]*
 
-// Identifiers
-IDENTIFIER  = [_a-zA-Z][_a-zA-Z0-9]*
-CONST_ID    = [A-Z][_A-Z0-9]*
+// Числа с разделителями _
+DIGIT           = [0-9]
+DIGIT_OR_UNDER  = [_0-9]
+HEX_DIGIT       = [_0-9a-fA-F]
+BIN_DIGIT       = [_01]
+OCT_DIGIT       = [_0-7]
 
-// Number components (based on Sublime spec)
-DIGIT       = [_0-9]
-BIN_DIGIT   = [_01]
-OCT_DIGIT   = [_0-7]
-HEX_DIGIT   = [_0-9a-fA-F]
+// Целочисленные литералы
+INTEGER_LITERAL = {DIGIT_OR_UNDER}+
+BINARY_LITERAL  = 0[bB]{BIN_DIGIT}+
+OCTAL_LITERAL   = 0[oO]{OCT_DIGIT}+
+HEX_LITERAL     = 0[xX]{HEX_DIGIT}+
 
-// Number formats: binary, octal, hex, float, scientific
-NUMBER_BIN  = 0b {BIN_DIGIT}+
-NUMBER_OCT  = 0o {OCT_DIGIT}+
-NUMBER_HEX  = 0x {HEX_DIGIT}+
-NUMBER_DEC  = {DIGIT}+
-NUMBER_FLOAT= {DIGIT}+ \. {DIGIT}* | {DIGIT}* \. {DIGIT}+
-NUMBER_SCI  = ({NUMBER_DEC} | {NUMBER_FLOAT}) [eE] [+\-]? {DIGIT}+
-NUMBER      = {NUMBER_BIN} | {NUMBER_OCT} | {NUMBER_HEX} | {NUMBER_FLOAT} | {NUMBER_SCI} | {NUMBER_DEC}
+// Вещественные литералы
+FLOAT_LITERAL   = {DIGIT_OR_UNDER}*\.{DIGIT_OR_UNDER}+|{DIGIT_OR_UNDER}+\.|{DIGIT_OR_UNDER}+[eE][+-]?{DIGIT_OR_UNDER}+|{DIGIT_OR_UNDER}*\.{DIGIT_OR_UNDER}+[eE][+-]?{DIGIT_OR_UNDER}+
 
-// String components
-STRING_CHAR = [^\"\\]
-ESCAPE_SEQ  = \\ ([tnr\"\\'0] | x {HEX_DIGIT} {2} | u {HEX_DIGIT} {4} | U {HEX_DIGIT} {8})
+NUMBER_LITERAL  = {BINARY_LITERAL}|{OCTAL_LITERAL}|{HEX_LITERAL}|{FLOAT_LITERAL}|{INTEGER_LITERAL}
 
-// Character literal (single quote)
-CHAR_CHAR   = [^\'\\]
-CHAR_LIT    = \' ({ESCAPE_SEQ} | {CHAR_CHAR}) \'
+// Строки и символы
+STRING_CHAR     = [^\"\\\r\n]
+CHAR_CHAR       = [^\'\\\r\n]
+// Экранированные последовательности должны быть в одной строке
+ESCAPE_SEQUENCE = \\[tnr\"\\'0]|\\x{HEX_DIGIT}{2}|\\u\{ {HEX_DIGIT}{1,6} \}|\\u{HEX_DIGIT}{4}|\\U{HEX_DIGIT}{8}
 
-// Comments
-SHEBANG        = "#!" [^\r\n]*
-DOC_LINE       = "///" [^\r\n]*
-LINE_COMMENT   = "//" [^\r\n]*
+CHAR_LITERAL    = \'({ESCAPE_SEQUENCE}|{CHAR_CHAR})\'
 
-// --- Rules ---
+// Комментарии
+LINE_COMMENT    = "//"[^\r\n]*
+DOC_COMMENT_LINE= "///"[^\r\n]*
+SHEBANG         = "#!"[^\r\n]*
 
+// === Правила ===
 %%
 
-// --- YYINITIAL: Default State ---
+// === Начальное состояние ===
 <YYINITIAL> {
-  {WHITE_SPACE}        { return TokenType.WHITE_SPACE; }
+    // Пробелы и переводы строк
+    {WHITE_SPACE}       { return TokenType.WHITE_SPACE; }
+    {LINE_TERMINATOR}   { return TokenType.WHITE_SPACE; }
 
-  // Comments
-  {SHEBANG}            { return SHEBANG; }
-  {DOC_LINE}           { return DOC_LINE; }
-  {LINE_COMMENT}       { return LINE_COMMENT; }
-  "/**"                { yybegin(IN_DOC_COMMENT); return DOC_COMMENT; }
-  "/*"                 { yybegin(IN_BLOCK_COMMENT); return BLOCK_COMMENT; }
+    // Shebang (только в начале файла)
+    ^ {SHEBANG}         { return SHEBANG; }
 
-  // Strings & Chars
-  \"                   { yybegin(IN_STRING); return STRING_START; }
-  "`"                  { yybegin(IN_INTERPOLATED); return INTERPOLATED_START; }
-  {CHAR_LIT}           { return CHAR_LITERAL; }
+    // Комментарии
+    {DOC_COMMENT_LINE}  { return DOC_COMMENT; }
+    {LINE_COMMENT}      { return LINE_COMMENT; }
+    "/*"                { pushState(IN_BLOCK_COMMENT); return BLOCK_COMMENT; }
+    "/**"               { pushState(IN_DOC_COMMENT); return DOC_COMMENT; }
 
-  // Numbers
-  {NUMBER}             { return NUMBER; }
+    // Строки и символы
+    \"                  { pushState(IN_STRING); return STRING_START; }
+    "`"                 { pushState(IN_INTERPOLATED_STRING); return INTERPOLATED_START; }
+    {CHAR_LITERAL}      { return CHAR_LITERAL; }
 
-  // Keywords: Control Flow
-  "if"                 { return IF; }
-  "else"               { return ELSE; }
-  "switch"             { return SWITCH; }
-  "while"              { return WHILE; }
-  "until"              { return UNTIL; }
-  "loop"               { return LOOP; }
-  "for"                { return FOR; }
-  "in"                 { return IN; }
-  "do"                 { return DO; }
-  "break"              { return BREAK; }
-  "continue"           { return CONTINUE; }
-  "return"             { return RETURN; }
+    // Числа
+    {NUMBER_LITERAL}    { return NUMBER; }
 
-  // Keywords: Exception/Module
-  "throw"              { return THROW; }
-  "try"                { return TRY; }
-  "catch"              { return CATCH; }
-  "import"             { return IMPORT; }
-  "export"             { return EXPORT; }
-  "as"                 { return AS; }
+    // Ключевые слова (соответствуют официальной грамматике Rhai)
+    "if"                { return IF; }
+    "else"              { return ELSE; }
+    "switch"            { return SWITCH; }
+    "while"             { return WHILE; }
+    "until"             { return UNTIL; }
+    "loop"              { return LOOP; }
+    "for"               { return FOR; }
+    "in"                { return IN; }
+    "do"                { return DO; }
+    "break"             { return BREAK; }
+    "continue"          { return CONTINUE; }
+    "return"            { return RETURN; }
+    "throw"             { return THROW; }
+    "try"               { return TRY; }
+    "catch"             { return CATCH; }
+    "import"            { return IMPORT; }
+    "export"            { return EXPORT; }
+    "as"                { return AS; }
+    "fn"                { return FN; }
+    "let"               { return LET; }
+    "const"             { return CONST; }
+    "private"           { return PRIVATE; }
+    "global"            { return GLOBAL; }
+    "shared"            { return SHARED; }
+    "sync"              { return SYNC; }
+    "async"             { return ASYNC; }
+    "await"             { return AWAIT; }
+    "true"              { return TRUE; }
+    "false"             { return FALSE; }
+    "null"              { return NULL; }
+    "this"              { return THIS; }
 
-  // Keywords: Declaration/Modifier
-  "fn"                 { return FN; }
-  "let"                { return LET; }
-  "const"              { return CONST; }
-  "private"            { return PRIVATE; }
-  "default"            { return DEFAULT; }
-  "global"             { return GLOBAL; }
+    // Литералы и специальные значения
+    "inf"               { return INF; }
+    "-inf"              { return NEG_INF; }
+    "NaN"               { return NAN; }
 
-  // Keywords: Literals/Special
-  "true"               { return TRUE; }
-  "false"              { return FALSE; }
-  "this"               { return THIS; }
+    // Идентификаторы (все остальные)
+    {IDENTIFIER}        { return IDENTIFIER; }
 
-  // Reserved/Invalid Keywords (from Sublime Text)
-  "var" | "static" | "shared" | "goto" | "exit" | "match" | "case" |
-  "public" | "protected" | "new" | "use" | "with" | "module" | "package" |
-  "super" | "thread" | "spawn" | "go" | "await" | "async" | "sync" |
-  "yield" | "void" | "null" | "nil" {
-    return RESERVED;
-  }
+    // Составные операторы (длинные первыми)
+    "**="               { return POW_ASSIGN; }
+    "**"                { return POW; }
+    "=="                { return EQ; }
+    "!="                { return NE; }
+    "<="                { return LE; }
+    ">="                { return GE; }
+    "<=>"               { return SPACESHIP; }
+    "&&"                { return AND; }
+    "||"                { return OR; }
+    "??"                { return NULL_COALESCING; }
+    "..="               { return DOT_DOT_EQ; }
+    ".."                { return DOT_DOT; }
+    "=>"                { return ARROW; }
+    "->"                { return THIN_ARROW; }
+    "<-"                { return LEFT_ARROW; }
+    "::"                { return DOUBLE_COLON; }
 
-  // Built-in Functions (from Sublime Text)
-  "print" | "debug" | "call" | "curry" | "eval" | "type_of" |
-  "is_def_var" | "is_def_fn" | "is_shared" {
-    return BUILTIN;
-  }
+    // Составные операторы присваивания
+    "+="                { return PLUS_ASSIGN; }
+    "-="                { return MINUS_ASSIGN; }
+    "*="                { return MUL_ASSIGN; }
+    "/="                { return DIV_ASSIGN; }
+    "%="                { return MOD_ASSIGN; }
+    "&="                { return AND_ASSIGN; }
+    "|="                { return OR_ASSIGN; }
+    "^="                { return XOR_ASSIGN; }
+    "<<="               { return SHL_ASSIGN; }
+    ">>="               { return SHR_ASSIGN; }
 
-  // Identifiers: Constants (ALL_CAPS) vs Variables
-  {CONST_ID}           { return CONSTANT; }
-  {IDENTIFIER}         { return IDENTIFIER; }
+    // Побитовые операторы
+    "<<"                { return SHL; }
+    ">>"                { return SHR; }
+    "&"                 { return BAND; }
+    "|"                 { return BOR; }
+    "^"                 { return BXOR; }
 
-  // Operators (longer matches first)
-  "==="                { return INVALID_OP; }
-  "!=="                { return INVALID_OP; }
-  "**"                 { return POW; }
-  ">>="                { return SHR_ASSIGN; }
-  "<<="                { return SHL_ASSIGN; }
-  ">>"                 { return SHR; }
-  "<<"                 { return SHL; }
-  "=="                 { return EQ; }
-  "!="                 { return NE; }
-  ">="                 { return GE; }
-  "<="                 { return LE; }
-  "&&"                 { return AND; }
-  "||"                 { return OR; }
-  "+="                 { return PLUS_ASSIGN; }
-  "-="                 { return MINUS_ASSIGN; }
-  "*="                 { return MUL_ASSIGN; }
-  "/="                 { return DIV_ASSIGN; }
-  "%="                 { return MOD_ASSIGN; }
-  "&="                 { return AND_ASSIGN; }
-  "|="                 { return OR_ASSIGN; }
-  "^="                 { return XOR_ASSIGN; }
-  "=>"                 { return ARROW; }
-  "::"                 { return DOUBLE_COLON; }
+    // Простые операторы
+    "+"                 { return PLUS; }
+    "-"                 { return MINUS; }
+    "*"                 { return MUL; }
+    "/"                 { return DIV; }
+    "%"                 { return MOD; }
+    "!"                 { return NOT; }
+    "="                 { return ASSIGN; }
+    "<"                 { return LT; }
+    ">"                 { return GT; }
 
-  // Invalid operators (per Sublime: ->, <-, .., etc.)
-  "->" | "<-" | ":=" | ":::" | "++" | "--" | "@" | "$" | "~" | "\.\."+ {
-    return INVALID_OP;
-  }
+    // Разделители
+    "."                 { return DOT; }
+    ","                 { return COMMA; }
+    ";"                 { return SEMICOLON; }
+    ":"                 { return COLON; }
+    "?"                 { return QUESTION; }
+    "@"                 { return AT; }
+    "$"                 { return DOLLAR; }
+    "~"                 { return TILDE; }
+    "#"                 { return HASH; }
 
-  // Single-char operators
-  "+"                  { return PLUS; }
-  "-"                  { return MINUS; }
-  "*"                  { return MUL; }
-  "/"                  { return DIV; }
-  "%"                  { return MOD; }
-  "!"                  { return NOT; }
-  "&"                  { return BAND; }
-  "|"                  { return BOR; }
-  "^"                  { return BXOR; }
-  "="                  { return ASSIGN; }
-  "<"                  { return LT; }
-  ">"                  { return GT; }
-  "."                  { return DOT; }
-  ","                  { return COMMA; }
-  ";"                  { return SEMICOLON; }
-  ":"                  { return COLON; }
-
-  // Brackets
-  "("                  { return LPAREN; }
-  ")"                  { return RPAREN; }
-  "{"                  { return LBRACE; }
-  "}"                  { return RBRACE; }
-  "["                  { return LBRACKET; }
-  "]"                  { return RBRACKET; }
-
-  // Fallback
-  [^]                  { return TokenType.BAD_CHARACTER; }
-}
-
-// --- IN_STRING: Double-quoted strings ---
-<IN_STRING> {
-  \"                   { yybegin(YYINITIAL); return STRING_END; }
-  {ESCAPE_SEQ}         { return STRING_ESCAPE; }
-  \\ {LINE_BREAK}      { return STRING_ESCAPE_NEWLINE; }
-  \\ [^]               { return INVALID_ESCAPE; }
-  {STRING_CHAR}+       { return STRING_CONTENT; }
-  {LINE_BREAK}         { yybegin(YYINITIAL); return TokenType.BAD_CHARACTER; } // Unterminated
-  <<EOF>>              { yybegin(YYINITIAL); return TokenType.BAD_CHARACTER; }
-}
-
-// --- IN_INTERPOLATED: Backtick strings ---
-<IN_INTERPOLATED> {
-  "`"                  { yybegin(YYINITIAL); return INTERPOLATED_END; }
-  "${"                 { braceDepth = 1; yybegin(IN_INTERPOLATED_EXPR); return INTERPOLATED_EXPR_START; }
-  [\$] / [^{]          { return INTERPOLATED_CONTENT; } // Raw dollar sign
-  [^`\\\$\r\n]+        { return INTERPOLATED_CONTENT; }
-  {ESCAPE_SEQ}         { return INTERPOLATED_ESCAPE; }
-  \\ {LINE_BREAK}      { return INTERPOLATED_ESCAPE_NEWLINE; }
-  \\ [^]               { return INVALID_ESCAPE; }
-  {LINE_BREAK}         { yybegin(YYINITIAL); return TokenType.BAD_CHARACTER; } // Unterminated
-  <<EOF>>              { yybegin(YYINITIAL); return TokenType.BAD_CHARACTER; }
-}
-
-// --- IN_INTERPOLATED_EXPR: Inside ${ } ---
-// We need to lex normal Rhai code here but watch for braces
-<IN_INTERPOLATED_EXPR> {
-  "{"                  { braceDepth++; return LBRACE; }
-  "}"                  { braceDepth--;
-                         if (braceDepth == 0) {
-                           yybegin(IN_INTERPOLATED);
-                           return INTERPOLATED_EXPR_END;
+    // Скобки
+    "("                 {
+                         if (inInterpolation()) pushBrace();
+                         return LPAREN;
+                       }
+    ")"                 {
+                         if (inInterpolation()) popBrace();
+                         return RPAREN;
+                       }
+    "{"                 {
+                         if (inInterpolation()) pushBrace();
+                         return LBRACE;
+                       }
+    "}"                 {
+                         if (inInterpolation()) {
+                             popBrace();
+                             if (!inInterpolation()) {
+                                 yybegin(IN_INTERPOLATED_STRING);
+                                 return INTERPOLATED_EXPR_END;
+                             }
                          }
                          return RBRACE;
                        }
+    "["                 {
+                         if (inInterpolation()) pushBrace();
+                         return LBRACKET;
+                       }
+    "]"                 {
+                         if (inInterpolation()) popBrace();
+                         return RBRACKET;
+                       }
 
-  // Delegate to YYINITIAL rules for expression content
-  // (This repetition is required by JFlex to handle tokens inside the state)
-  {WHITE_SPACE}        { return TokenType.WHITE_SPACE; }
-  {LINE_COMMENT}       { return LINE_COMMENT; }
-  \"                   { yybegin(IN_STRING); return STRING_START; } // Nested string
-  "`"                  { yybegin(IN_INTERPOLATED); return INTERPOLATED_START; } // Nested template
-
-  // Simplified expression tokens (full list should mirror YYINITIAL)
-  {NUMBER}             { return NUMBER; }
-  {IDENTIFIER}         { return IDENTIFIER; }
-
-  // Operators (essential subset for inside interpolations)
-  "**"|"=="|"!="|"<="|">="|"&&"|"||"|"=>" { return INVALID_OP; } /* Simplified - map properly */
-  "+"|"-"|"*"|"/"|"="|"<"|">" { return INVALID_OP; } /* Placeholder - use proper tokens */
-
-  // IMPORTANT: In a production file, you would include all YYINITIAL rules here
-  // or use a shared macro. For brevity, this shows the structure.
-
-  [^]                  { return TokenType.BAD_CHARACTER; }
-  <<EOF>>              { yybegin(YYINITIAL); return TokenType.BAD_CHARACTER; }
+    // Неожиданный символ
+    [^]                 { return TokenType.BAD_CHARACTER; }
 }
 
-// --- Block Comments (Exclusive states) ---
+// === Строки в двойных кавычках ===
+<IN_STRING> {
+    \"                  { popState(); return STRING_END; }
+
+    // Экранированные последовательности
+    {ESCAPE_SEQUENCE}   { return STRING_ESCAPE; }
+
+    // Продолжение строки на новой строке
+    \\{LINE_TERMINATOR} { return STRING_ESCAPE_NEWLINE; }
+
+    // Некорректное экранирование
+    \\[^]               { return INVALID_ESCAPE; }
+
+    // Содержимое строки
+    {STRING_CHAR}+      { return STRING_CONTENT; }
+
+    // Конец файла внутри строки
+    <<EOF>>             { popState(); return TokenType.BAD_CHARACTER; }
+}
+
+// === Интерполированные строки (обратные кавычки) ===
+<IN_INTERPOLATED_STRING> {
+    "`"                 { popState(); return INTERPOLATED_END; }
+
+    // Начало интерполированного выражения
+    "${"                {
+                         pushState(YYINITIAL);
+                         braceStack.push(1);
+                         return INTERPOLATED_EXPR_START;
+                       }
+
+    // Экранированные последовательности
+    {ESCAPE_SEQUENCE}   { return INTERPOLATED_ESCAPE; }
+
+    // Продолжение строки на новой строке
+    \\{LINE_TERMINATOR} { return INTERPOLATED_ESCAPE_NEWLINE; }
+
+    // Доллар без фигурных скобок
+    "$"/[^\{]           { return INTERPOLATED_CONTENT; }
+
+    // Некорректное экранирование
+    \\[^]               { return INVALID_ESCAPE; }
+
+    // Содержимое интерполированной строки
+    [^`\\\$\r\n]+       { return INTERPOLATED_CONTENT; }
+
+    // Конец файла внутри интерполированной строки
+    <<EOF>>             { popState(); return TokenType.BAD_CHARACTER; }
+}
+
+// === Многострочные комментарии ===
 <IN_BLOCK_COMMENT> {
-  "*/"                 { yybegin(YYINITIAL); return BLOCK_COMMENT; }
-  [^*]+ | "*" [^/]     { /* consume */ }
-  <<EOF>>              { yybegin(YYINITIAL); return TokenType.BAD_CHARACTER; }
+    "*/"                { popState(); return BLOCK_COMMENT; }
+    [^*]+               { /* потребляем содержимое */ }
+    "*"                 { /* потребляем одиночную звёздочку */ }
+    <<EOF>>             { popState(); return TokenType.BAD_CHARACTER; }
 }
 
+// === Документационные комментарии ===
 <IN_DOC_COMMENT> {
-  "*/"                 { yybegin(YYINITIAL); return DOC_COMMENT; }
-  [^*]+ | "*" [^/]     { /* consume */ }
-  <<EOF>>              { yybegin(YYINITIAL); return TokenType.BAD_CHARACTER; }
+    "*/"                { popState(); return DOC_COMMENT; }
+    [^*]+               { /* потребляем содержимое */ }
+    "*"                 { /* потребляем одиночную звёздочку */ }
+    <<EOF>>             { popState(); return TokenType.BAD_CHARACTER; }
 }

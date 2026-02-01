@@ -9,7 +9,8 @@ import org.rhai.RhaiTypes
 class RhaiBraceMatcher : PairedBraceMatcher {
     private val pairs = arrayOf(
         BracePair(RhaiTypes.LPAREN, RhaiTypes.RPAREN, false),
-        BracePair(RhaiTypes.LBRACE, RhaiTypes.RBRACE, true)
+        BracePair(RhaiTypes.LBRACE, RhaiTypes.RBRACE, true),
+        BracePair(RhaiTypes.LBRACKET, RhaiTypes.RBRACKET, false)
     )
 
     override fun getPairs(): Array<BracePair> = pairs

@@ -1,6 +1,5 @@
 {
   parserClass="org.rhai.RhaiParser"
-
   extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
 
   psiClassPrefix="Rhai"
@@ -14,159 +13,174 @@
 
   consumeTokenMethod(".*")="consumeToken"
 
-   tokens = [
-      // Скобки
-      LPAREN='('
-      RPAREN=')'
-      LBRACKET='['
-      RBRACKET=']'
-      LBRACE='{'
-      RBRACE='}'
+  tokens = [
+    // Скобки
+    LPAREN='('
+    RPAREN=')'
+    LBRACKET='['
+    RBRACKET=']'
+    LBRACE='{'
+    RBRACE='}'
 
-      // Операторы
-      PLUS='+'
-      MINUS='-'
-      MUL='*'
-      DIV='/'
-      MOD='%'
-      ASSIGN='='
-      NOT='!'
-      BAND='&'
-      BOR='|'
-      BXOR='^'
-      LT='<'
-      GT='>'
-      DOT='.'
-      COLON=':'
-      SEMICOLON=';'
-      COMMA=','
+    // Операторы
+    PLUS='+'
+    MINUS='-'
+    MUL='*'
+    DIV='/'
+    MOD='%'
+    ASSIGN='='
+    NOT='!'
+    BAND='&'
+    BOR='|'
+    BXOR='^'
+    LT='<'
+    GT='>'
+    DOT='.'
+    COLON=':'
+    SEMICOLON=';'
+    COMMA=','
+    QUESTION='?'
+    AT='@'
 
-      // Составные операторы
-      ARROW='=>'
-      DOUBLE_COLON='::'
-      POW='**'
-      SHL_ASSIGN='<<='
-      SHR_ASSIGN='>>='
-      SHL='<<'
-      SHR='>>'
-      LE='<='
-      GE='>='
-      EQ='=='
-      NE='!='
-      PLUS_ASSIGN='+='
-      MINUS_ASSIGN='-='
-      MUL_ASSIGN='*='
-      DIV_ASSIGN='/='
-      MOD_ASSIGN='%='
-      AND_ASSIGN='&='
-      OR_ASSIGN='|='
-      XOR_ASSIGN='^='
-      AND='&&'
-      OR='||'
+    // Составные операторы
+    ARROW='=>'
+    DOUBLE_COLON='::'
+    POW='**'
+    RANGE='..'
+    NULL_COALESCING='??'
+    SHL_ASSIGN='<<='
+    SHR_ASSIGN='>>='
+    SHL='<<'
+    SHR='>>'
+    LE='<='
+    GE='>='
+    EQ='=='
+    NE='!='
+    PLUS_ASSIGN='+='
+    MINUS_ASSIGN='-='
+    MUL_ASSIGN='*='
+    DIV_ASSIGN='/='
+    MOD_ASSIGN='%='
+    AND_ASSIGN='&='
+    OR_ASSIGN='|='
+    XOR_ASSIGN='^='
+    AND='&&'
+    OR='||'
 
-      // Ключевые слова
-      FN='fn'
-      PRIVATE='private'
-      CONST='const'
-      LET='let'
-      IF='if'
-      ELSE='else'
-      SWITCH='switch'
-      DEFAULT='default'
-      RETURN='return'
-      THROW='throw'
-      TRY='try'
-      CATCH='catch'
-      FOR='for'
-      IN='in'
-      LOOP='loop'
-      DO='do'
-      WHILE='while'
-      UNTIL='until'
-      BREAK='break'
-      CONTINUE='continue'
-      IMPORT='import'
-      EXPORT='export'
-      AS='as'
-      THIS='this'
-      GLOBAL='global'
-      TRUE='true'
-      FALSE='false'
+    // Ключевые слова
+    FN='fn'
+    PRIVATE='private'
+    CONST='const'
+    LET='let'
+    IF='if'
+    ELSE='else'
+    SWITCH='switch'
+    DEFAULT='default'
+    RETURN='return'
+    THROW='throw'
+    TRY='try'
+    CATCH='catch'
+    FOR='for'
+    IN='in'
+    IS='is'
+    AS='as'
+    LOOP='loop'
+    DO='do'
+    WHILE='while'
+    UNTIL='until'
+    BREAK='break'
+    CONTINUE='continue'
+    IMPORT='import'
+    EXPORT='export'
+    MODULE='module'
+    THIS='this'
+    GLOBAL='global'
+    TRUE='true'
+    FALSE='false'
+    NULL='null'
+    UNDEF='undefined'
 
-      // Литералы
-      NUMBER='NUMBER'
-      STRING='STRING'
-      CHAR_LITERAL_TOKEN='CHAR_LITERAL_TOKEN'
-      CONSTANT='CONSTANT'
-      IDENTIFIER='identifier'
-      SHEBANG_TOKEN='SHEBANG_TOKEN'
+    // Литералы
+    INTEGER='INTEGER'
+    FLOAT='FLOAT'
+    STRING='STRING'
+    RAW_STRING='RAW_STRING'
+    MULTILINE_STRING='MULTILINE_STRING'
+    CHAR_LITERAL='CHAR_LITERAL'
+    REGEX_LITERAL='REGEX_LITERAL'
+    IDENTIFIER='identifier'
+    SHEBANG_TOKEN='SHEBANG_TOKEN'
 
-      // Комментарии
-      BLOCK_COMMENT='BLOCK_COMMENT'
-      DOC_COMMENT='DOC_COMMENT'
-      DOC_LINE='DOC_LINE'
-      LINE_COMMENT='LINE_COMMENT'
+    // Комментарии
+    BLOCK_COMMENT='BLOCK_COMMENT'
+    DOC_COMMENT='DOC_COMMENT'
+    DOC_LINE='DOC_LINE'
+    LINE_COMMENT='LINE_COMMENT'
 
-      // Интерполированные строки
-      INTERPOLATED_START='INTERPOLATED_START'
-      INTERPOLATED_END='INTERPOLATED_END'
-      INTERPOLATED_EXPR_START='INTERPOLATED_EXPR_START'
-      INTERPOLATED_EXPR_END='INTERPOLATED_EXPR_END'
-      INTERPOLATED_TEXT='INTERPOLATED_TEXT'
+    // Интерполированные строки
+    INTERPOLATED_START='`'
+    INTERPOLATED_END='`'
+    INTERPOLATED_EXPR_START='${'
+    INTERPOLATED_EXPR_END='}'
+    INTERPOLATED_TEXT='INTERPOLATED_TEXT'
 
-      // Прочие
-      BUILTIN='BUILTIN'
-      RESERVED='RESERVED'
-      INVALID_OP='INVALID_OP'
-      INVALID_ESCAPE='INVALID_ESCAPE'
+    // Атрибуты
+    HASH='#'
+    LBRACKET='['
+    RBRACKET=']'
 
-       STRING_START='STRING_START'
-       STRING_END='STRING_END'
-       STRING_CONTENT='STRING_CONTENT'
-       STRING_ESCAPE='STRING_ESCAPE'
-       STRING_ESCAPE_NEWLINE='STRING_ESCAPE_NEWLINE'
-
-        // Для интерполированных строк (между INTERPOLATED_TEXT и BUILTIN)
-       INTERPOLATED_CONTENT='INTERPOLATED_CONTENT'  // или замените INTERPOLATED_TEXT на это
-       INTERPOLATED_ESCAPE='INTERPOLATED_ESCAPE'
-       INTERPOLATED_ESCAPE_NEWLINE='INTERPOLATED_ESCAPE_NEWLINE'
-
-        // Ошибки
-       INVALID_ESCAPE='INVALID_ESCAPE'
-    ]
+    // Прочие
+    BUILTIN='BUILTIN'
+    RESERVED='RESERVED'
+    INVALID_OP='INVALID_OP'
+    INVALID_ESCAPE='INVALID_ESCAPE'
+  ]
 }
 
-// Root
-rhaiFile ::= shebang? top_level_item*
+// Основная структура файла
+rhaiFile ::= shebang? (attribute_list? top_level_item)*
 
-private top_level_item ::= function_definition
+private top_level_item ::= module_declaration
+                         | function_definition
                          | import_statement
                          | export_statement
                          | statement
                          | ';'
 
-shebang ::= shebang_token
-private shebang_token ::= SHEBANG_TOKEN
+shebang ::= SHEBANG_TOKEN
+
+// Атрибуты
+attribute_list ::= '#' '[' attribute (',' attribute)* ']'
+attribute ::= IDENTIFIER ('(' literal (',' literal)* ')')?
+
+// Модули
+module_declaration ::= 'module' IDENTIFIER '{' top_level_item* '}'
 
 // Import/Export
-import_statement ::= 'import' import_path ('as' identifier)? ';'?
+import_statement ::= 'import' import_path ('as' IDENTIFIER)? ';'?
                    | 'import' import_path '::' '*' ';'?
-import_path ::= identifier ('::' identifier)*
+                   | 'import' string_literal 'as' IDENTIFIER ';'?
 
-export_statement ::= 'export' (function_definition | const_declaration | let_declaration)
+import_path ::= IDENTIFIER ('::' IDENTIFIER)*
 
-// Function definition: fn name(args) { body }
-function_definition ::= 'private'? 'fn' identifier '(' parameters? ')' block?
+export_statement ::= 'export' (function_definition | const_declaration | let_declaration | 'module' IDENTIFIER)
+
+// Function definition
+function_definition ::= attribute_list? visibility? 'fn' IDENTIFIER '(' parameters? ')' return_type? (block | ';')
+visibility ::= 'private' | 'pub'
+return_type ::= '->' type_annotation
 
 parameters ::= parameter (',' parameter)* ','?
-parameter ::= identifier
+parameter ::= pattern (':' type_annotation)?
+type_annotation ::= type_name ('<' type_annotation (',' type_annotation)* '>')?
+type_name ::= 'int' | 'float' | 'bool' | 'string' | 'Array' | 'Map' | 'Fn' | IDENTIFIER
 
 // Statements
 statement ::= let_declaration
             | const_declaration
             | expression_statement
             | if_statement
-            | switch_statement
+            | switch_expression
             | while_statement
             | do_while_statement
             | until_statement
@@ -181,125 +195,165 @@ statement ::= let_declaration
             | block
 
 // Variable declarations
-let_declaration ::= 'let' pattern ('=' expression)? ';'?
-const_declaration ::= 'const' pattern ('=' expression)? ';'?
-pattern ::= identifier | '_' | CONSTANT
+let_declaration ::= 'let' pattern (':' type_annotation)? ('=' expression)? ';'?
+const_declaration ::= 'const' pattern (':' type_annotation)? ('=' expression)? ';'?
+pattern ::= IDENTIFIER
+          | '_'
+          | literal
+          | '[' pattern (',' pattern)* ']'
+          | '{' field_pattern (',' field_pattern)* '}'
+field_pattern ::= IDENTIFIER (':' pattern)?
 
-// Labeled statements: 'label: loop { ... }' or '"string label": while ...'
+// Labeled statements
 labeled_statement ::= label ':' statement
-label ::= identifier | string_literal
+label ::= IDENTIFIER | string_literal
 
 // Control flow
 if_statement ::= 'if' expression block ('else' (if_statement | block))?
-switch_statement ::= 'switch' expression '{' switch_arm* default_arm? '}'
-switch_arm ::= expression '=>' (expression | block) ','?
+switch_expression ::= 'switch' expression '{' switch_arm* default_arm? '}'
+switch_arm ::= pattern (',' pattern)* ('if' expression)? '=>' (expression | block) ','?
 default_arm ::= 'default' '=>' (expression | block) ','?
 
 while_statement ::= 'while' expression block
 do_while_statement ::= 'do' block 'while' expression ';'?
 until_statement ::= 'until' expression block
 loop_statement ::= 'loop' block
-for_statement ::= 'for' identifier 'in' expression block
+for_statement ::= 'for' pattern 'in' expression block
 
-break_statement ::= 'break' (expression | identifier)? ';'?
+break_statement ::= 'break' (expression | IDENTIFIER)? ';'?
 continue_statement ::= 'continue' ';'?
 return_statement ::= 'return' expression? ';'?
 throw_statement ::= 'throw' expression ';'?
-try_catch_statement ::= 'try' block 'catch' '(' identifier ')' block
+try_catch_statement ::= 'try' block ('catch' '(' pattern ')' block)+
 
 block ::= '{' statement* '}'
 
-// Expressions (precedence climbing, low to high)
-expression ::= assignment_expr
+// Expressions (правильная иерархия приоритетов)
+expression ::= null_coalescing_expr
 
-// Assignment (right associative)
-assignment_expr ::= pipe_expr (assignment_op assignment_expr)?
+// Null coalescing (низший приоритет)
+null_coalescing_expr ::= assignment_expr ('??' assignment_expr)*
+
+// Assignment (правой ассоциативности)
+assignment_expr ::= lambda_expr (assignment_op assignment_expr)?
 assignment_op ::= '=' | '+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '|=' | '^=' | '<<=' | '>>='
 
-// Arrow (switch arms, closure shorthand)
-pipe_expr ::= or_expr ('=>' or_expr)*
+// Lambda expressions
+lambda_expr ::= '|' closure_params? '|' '=>' expression
+              | conditional_expr
+
+// Conditional (тернарный оператор)
+conditional_expr ::= logical_or_expr ('?' expression ':' conditional_expr)?
 
 // Logical OR/AND
-or_expr ::= and_expr (('||') and_expr)*
-and_expr ::= eq_expr (('&&') eq_expr)*
+logical_or_expr ::= logical_and_expr ('||' logical_and_expr)*
+logical_and_expr ::= equality_expr ('&&' equality_expr)*
 
 // Equality/Relational
-eq_expr ::= rel_expr (('==' | '!=') rel_expr)*
-rel_expr ::= bit_or_expr (('<' | '>' | '<=' | '>=') bit_or_expr)*
+equality_expr ::= relational_expr (('==' | '!=') relational_expr)*
+relational_expr ::= range_expr (('<' | '>' | '<=' | '>=' | 'is' | '!is') range_expr)*
+
+// Range operator
+range_expr ::= bitwise_or_expr ('..' bitwise_or_expr)?
 
 // Bitwise
-bit_or_expr ::= bit_xor_expr (('|') bit_xor_expr)*
-bit_xor_expr ::= bit_and_expr (('^') bit_and_expr)*
-bit_and_expr ::= shift_expr (('&') shift_expr)*
+bitwise_or_expr ::= bitwise_xor_expr ('|' bitwise_xor_expr)*
+bitwise_xor_expr ::= bitwise_and_expr ('^' bitwise_and_expr)*
+bitwise_and_expr ::= shift_expr ('&' shift_expr)*
 
 // Shift
-shift_expr ::= add_expr (('<<' | '>>') add_expr)*
+shift_expr ::= additive_expr (('<<' | '>>') additive_expr)*
 
 // Additive/Multiplicative
-add_expr ::= mul_expr (('+' | '-') mul_expr)*
-mul_expr ::= power_expr (('*' | '/' | '%') power_expr)*
+additive_expr ::= multiplicative_expr (('+' | '-') multiplicative_expr)*
+multiplicative_expr ::= power_expr (('*' | '/' | '%') power_expr)*
 
-// Power (right associative)
-power_expr ::= unary_expr ('**' power_expr)?
+// Power (правой ассоциативности) - исправлено
+power_expr ::= unary_expr ('**' power_expr)*
 
 // Unary
-unary_expr ::= ('!' | '-' | '+') unary_expr | postfix_expr
+unary_expr ::= ('!' | '-' | '+' | '*' | '&' | '?')* postfix_expr
 
 // Postfix: calls, indexing, field access
 postfix_expr ::= primary_expr postfix_op*
-postfix_op ::= '(' argument_list? ')' capture_flag?   // fn!() - capture syntax
-             | '.' identifier                        // field access
-             | '[' expression ']'                    // index
+postfix_op ::= '(' argument_list? ')' '?'?           // fn()? - optional call
+             | '.' IDENTIFIER ('?' | '!')?           // field access with optional/null
+             | '[' expression ']' ('?' | '!')?       // index with optional/null
+             | '?'                                   // error propagation
+             | '!'                                   // non-null assertion
 
-capture_flag ::= '!'
 argument_list ::= expression (',' expression)* ','?
 
 // Primary expressions
 primary_expr ::= literal
-               | identifier
+               | IDENTIFIER
                | BUILTIN
                | path_expression
                | 'this'
                | 'global'
-               | '(' expression? ')'  // grouping or unit
+               | 'null'
+               | 'undefined'
+               | '(' expression? ')'                 // grouping или unit
                | array_literal
                | object_literal
                | closure_expr
                | interpolated_string
+               | switch_expression
+               | macro_invocation
 
-// Path: std::foo::bar
-path_expression ::= identifier ('::' identifier)+
+// Path expressions
+path_expression ::= IDENTIFIER ('::' IDENTIFIER)+
 
 // Literals
 literal ::= numeric_literal
           | string_literal
           | char_literal
           | boolean_literal
+          | regex_literal
 
-numeric_literal ::= NUMBER
-string_literal ::= STRING_START string_content* STRING_END
-private string_content ::= STRING_CONTENT | STRING_ESCAPE | STRING_ESCAPE_NEWLINE
-char_literal ::= char_literal_token
-private char_literal_token ::= CHAR_LITERAL_TOKEN
+numeric_literal ::= INTEGER | FLOAT
+string_literal ::= STRING | RAW_STRING | MULTILINE_STRING
+char_literal ::= CHAR_LITERAL
 boolean_literal ::= 'true' | 'false'
+regex_literal ::= REGEX_LITERAL
 
+// Array literals
 array_literal ::= '[' array_elements? ']'
 array_elements ::= expression (',' expression)* ','?
+                  | expression (';' expression)?     // [0; 10] - repeat
 
+// Object literals
 object_literal ::= '{' object_fields? '}'
 object_fields ::= object_field (',' object_field)* ','?
-object_field ::= (identifier | string_literal) ':' expression
+object_field ::= (IDENTIFIER | string_literal | computed_property) ':' expression
+               | spread_expr
+computed_property ::= '[' expression ']'
+spread_expr ::= '...' expression
 
-// Closure: |x, y| x + y  or  |x| { block }
-closure_expr ::= '|' closure_params? '|' closure_body
+// Closures
+closure_expr ::= attribute_list? '|' closure_params? '|' closure_body
 closure_params ::= closure_param (',' closure_param)* ','?
-closure_param ::= identifier
-closure_body ::= expression | block
+closure_param ::= pattern (':' type_annotation)?
+closure_body ::= '=>' expression | block
 
-// Interpolated string: `text ${expr} text`
-interpolated_string ::= INTERPOLATED_START interpolated_part* INTERPOLATED_END
+// Interpolated strings
+interpolated_string ::= '`' interpolated_part* '`'
 interpolated_part ::= INTERPOLATED_TEXT
                     | INTERPOLATED_EXPR_START expression '}'
 
-// Expression statement (semicolon optional in some contexts)
+// Макросы
+macro_invocation ::= IDENTIFIER '!' macro_input
+macro_input ::= '(' macro_args? ')'
+              | '[' macro_args? ']'
+              | '{' macro_args? '}'
+              | token_tree
+macro_args ::= macro_arg (',' macro_arg)* ','?
+macro_arg ::= expression | IDENTIFIER ':' expression
+token_tree ::= token_tree_token+
+token_tree_token ::= IDENTIFIER | literal | '(' token_tree ')' | '[' token_tree ']' | '{' token_tree '}'
+
+// Expression statement
 expression_statement ::= expression ';'?
+
+// Error recovery rules
+recover_while ::= !(';' | '}' | ')' | ']' | EOF)
