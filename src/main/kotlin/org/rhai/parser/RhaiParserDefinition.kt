@@ -170,7 +170,7 @@ class RhaiParserDefinition : ParserDefinition {
 //        )
     }
 
-    override fun createLexer(project: Project): Lexer = RhaiFlexAdapter()
+    override fun createLexer(project: Project): Lexer = RhaiFlexAdapter.INSTANCE
 
     override fun createParser(project: Project): PsiParser = RhaiParser()
 

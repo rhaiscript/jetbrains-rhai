@@ -138,14 +138,13 @@ SHEBANG         = "#!"[^\r\n]*
                          rawStringHashes = text.indexOf('"') - 1;
                          if (rawStringHashes < 0) rawStringHashes = 0;
                          pushState(IN_RAW_STRING);
-                         return RhaiTypes.RAW_STRING_LITERAL;
                        }
 
     // Multi-line strings
-    {MULTI_STRING_START} { pushState(IN_MULTI_STRING); return RhaiTypes.MULTILINE_STRING_LITERAL; }
+    {MULTI_STRING_START} { pushState(IN_MULTI_STRING); }
 
     // Обычные строки
-    \"                  { pushState(IN_STRING); return RhaiTypes.STRING_LITERAL; }
+    \"                  { pushState(IN_STRING); }
 
     // Интерполированные строки
     "`"                 { pushState(IN_INTERPOLATED_STRING); return RhaiTypes.INTERPOLATED_START; }

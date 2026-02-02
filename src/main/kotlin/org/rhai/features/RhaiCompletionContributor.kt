@@ -15,7 +15,6 @@ class RhaiCompletionContributor : CompletionContributor() {
                     context: ProcessingContext,
                     result: CompletionResultSet
                 ) {
-                    // Ключевые слова Rhai
                     val keywords = listOf(
                         "let", "if", "else", 
                         "while", "true", "false", "null"
@@ -29,7 +28,6 @@ class RhaiCompletionContributor : CompletionContributor() {
                         )
                     }
                     
-                    // Встроенные функции Rhai
                     val builtins = listOf(
                         "print", "println", "type_of", "to_string",
                         "to_int", "to_float", "abs", "sin", "cos"

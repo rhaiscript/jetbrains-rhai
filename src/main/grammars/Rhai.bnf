@@ -146,7 +146,7 @@
   ]
 }
 
-// === Грамматика ===
+/* === Грамматика === */
 
 rhaiFile ::= SHEBANG? (attribute_list? top_level_item)*
 
@@ -156,6 +156,7 @@ private top_level_item ::= module_declaration
                          | export_statement
                          | statement
                          | SEMICOLON
+                         | dummy_comment_tokens
 
 // Атрибуты
 attribute_list ::= HASH LBRACKET attribute (COMMA attribute)* RBRACKET

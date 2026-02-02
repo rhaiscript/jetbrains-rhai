@@ -8,6 +8,11 @@
     <extensions defaultExtensionNs="com.intellij">
         <internalFileTemplate name="Rhai File.rhai"/>
 
+        <gotoDeclarationHandler implementation="org.rhai.navigation.RhaiGotoDeclarationHandler"/>
+        
+        <colorSettingsPage
+                implementation="org.rhai.settings.RhaiColorSettingsPage"/>
+
         <fileType name="Rhai File"
                   implementationClass="org.rhai.lang.RhaiFileType"
                   fieldName="INSTANCE"
@@ -30,7 +35,7 @@
                                 implementationClass="org.rhai.features.RhaiCompletionContributor"/>
         <annotator language="Rhai" implementationClass="org.rhai.features.RhaiAnnotator"/>
         <psi.referenceContributor language="Rhai"
-                                  implementationClass="org.rhai.features.RhaiReferenceContributor"/>
+                                  implementation="org.rhai.features.RhaiReferenceContributor"/>
         <lang.documentationProvider language="Rhai"
                                     implementationClass="org.rhai.features.RhaiDocumentationProvider"/>
         <lang.psiStructureViewFactory language="Rhai"
