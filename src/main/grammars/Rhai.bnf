@@ -267,7 +267,7 @@ logical_and_expr ::= equality_expr (AND equality_expr)*
 equality_expr ::= relational_expr ((EQ | NE) relational_expr)*
 relational_expr ::= range_expr ((LT | GT | LE | GE | IS | IN | NOT IS | NOT IN) range_expr)*
 
-range_expr ::= bitwise_or_expr (RANGE bitwise_or_expr (DOT_DOT_EQ bitwise_or_expr)?)?
+range_expr ::= bitwise_or_expr ((RANGE | DOT_DOT_EQ) bitwise_or_expr)?
 
 bitwise_or_expr ::= bitwise_xor_expr (BOR bitwise_xor_expr)*
 bitwise_xor_expr ::= bitwise_and_expr (BXOR bitwise_and_expr)*

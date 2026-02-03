@@ -9,6 +9,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import org.rhai.*
 import org.rhai.lang.RhaiFile
+import org.rhai.settings.RhaiCustomRegistrySettings
 
 class RhaiUnresolvedReferenceInspection : RhaiInspectionBase() {
 
@@ -64,6 +65,13 @@ class RhaiUnresolvedReferenceInspection : RhaiInspectionBase() {
 
         // Skip keywords that might appear as identifiers
         if (KEYWORDS.contains(name)) return
+
+        // Skip if it's a custom registered function/variable from Rust
+        val project = element.project
+        val customRegistry = RhaiCustomRegistrySettings.getInstance(project)
+        if (customRegistry.getCustomFunctionList().contains(name)) return
+        if (customRegistry.getCustomVariableList().contains(name)) return
+        if (customRegistry.getCustomTypeList().contains(name)) return
 
         // Check if it's a function call
         val isFunctionCall = isFunctionCall(element)

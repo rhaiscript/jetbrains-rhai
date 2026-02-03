@@ -152,6 +152,13 @@
 
         <!-- Settings & Services -->
         <projectService serviceImplementation="org.rhai.settings.RhaiSettings"/>
+        <projectService serviceImplementation="org.rhai.settings.RhaiCustomRegistrySettings"/>
+
+        <!-- Project Settings Configurable -->
+        <projectConfigurable parentId="language"
+                             instance="org.rhai.settings.RhaiCustomRegistryConfigurable"
+                             id="org.rhai.settings.RhaiCustomRegistryConfigurable"
+                             displayName="Rhai Custom Registry"/>
 
         <!-- File Templates -->
         <fileTemplateGroup implementation="org.rhai.file.RhaiTemplatesProvider"/>

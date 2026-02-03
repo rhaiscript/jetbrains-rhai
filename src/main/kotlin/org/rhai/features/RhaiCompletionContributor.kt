@@ -11,6 +11,7 @@ import com.intellij.psi.util.elementType
 import com.intellij.util.ProcessingContext
 import org.rhai.*
 import org.rhai.lang.RhaiFile
+import org.rhai.settings.RhaiCustomRegistrySettings
 import javax.swing.Icon
 
 class RhaiCompletionContributor : CompletionContributor() {
@@ -46,6 +47,9 @@ class RhaiCompletionContributor : CompletionContributor() {
             // Add builtin functions
             addBuiltinFunctions(result)
 
+            // Add custom registered functions/variables from Rust
+            addCustomRegistryItems(parameters, result)
+
             // Add user-defined functions
             addUserFunctions(file, result)
 
@@ -79,6 +83,40 @@ class RhaiCompletionContributor : CompletionContributor() {
                         .withTailText("(${info.params})", true)
                         .withIcon(AllIcons.Nodes.Method)
                         .withInsertHandler(FunctionInsertHandler(info.params.isNotEmpty()))
+                )
+            }
+        }
+
+        private fun addCustomRegistryItems(parameters: CompletionParameters, result: CompletionResultSet) {
+            val project = parameters.position.project
+            val registry = RhaiCustomRegistrySettings.getInstance(project)
+
+            // Add custom functions
+            registry.getCustomFunctionList().forEach { name ->
+                result.addElement(
+                    LookupElementBuilder.create(name)
+                        .withTypeText("Rust function")
+                        .withTailText("(...)", true)
+                        .withIcon(AllIcons.Nodes.Method)
+                        .withInsertHandler(FunctionInsertHandler(true))
+                )
+            }
+
+            // Add custom variables
+            registry.getCustomVariableList().forEach { name ->
+                result.addElement(
+                    LookupElementBuilder.create(name)
+                        .withTypeText("Rust variable")
+                        .withIcon(AllIcons.Nodes.Variable)
+                )
+            }
+
+            // Add custom types
+            registry.getCustomTypeList().forEach { name ->
+                result.addElement(
+                    LookupElementBuilder.create(name)
+                        .withTypeText("Rust type")
+                        .withIcon(AllIcons.Nodes.Class)
                 )
             }
         }
