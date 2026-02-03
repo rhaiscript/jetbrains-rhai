@@ -139,7 +139,7 @@
     INTERPOLATED_START='`'
     INTERPOLATED_END='`'
     INTERPOLATED_EXPR_START='${'
-    INTERPOLATED_EXPR_END='}'
+    INTERPOLATED_EXPR_END  // No '=' to avoid conflict with RBRACE
 
     // Bad character
     BAD_CHARACTER
@@ -204,8 +204,8 @@ statement ::= let_declaration
             | block
 
 // Variable declarations
-let_declaration ::= LET pattern (COLON type_annotation)? (ASSIGN expression)? SEMICOLON?
-const_declaration ::= CONST pattern (COLON type_annotation)? (ASSIGN expression)? SEMICOLON?
+let_declaration ::= visibility? LET pattern (COLON type_annotation)? (ASSIGN expression)? SEMICOLON?
+const_declaration ::= visibility? CONST pattern (COLON type_annotation)? (ASSIGN expression)? SEMICOLON?
 pattern ::= IDENTIFIER
           | '_'
           | literal_value
@@ -265,7 +265,7 @@ logical_or_expr ::= logical_and_expr (OR logical_and_expr)*
 logical_and_expr ::= equality_expr (AND equality_expr)*
 
 equality_expr ::= relational_expr ((EQ | NE) relational_expr)*
-relational_expr ::= range_expr ((LT | GT | LE | GE | IS | NOT IS) range_expr)*
+relational_expr ::= range_expr ((LT | GT | LE | GE | IS | IN | NOT IS | NOT IN) range_expr)*
 
 range_expr ::= bitwise_or_expr (RANGE bitwise_or_expr (DOT_DOT_EQ bitwise_or_expr)?)?
 
@@ -291,9 +291,8 @@ postfix_op ::= LPAREN argument_list? RPAREN QUESTION?
 argument_list ::= expression (COMMA expression)* COMMA?
 
 primary_expr ::= literal_value
-               | IDENTIFIER
-               | BUILTIN
                | path_expression
+               | IDENTIFIER
                | THIS
                | GLOBAL
                | LPAREN expression? RPAREN
@@ -301,8 +300,12 @@ primary_expr ::= literal_value
                | object_literal
                | closure_expr
                | interpolated_string
+               | if_expression
                | switch_expression
                | macro_invocation
+
+// If as expression (returns value)
+if_expression ::= IF expression block (ELSE (if_expression | block))?
 
 path_expression ::= IDENTIFIER (DOUBLE_COLON IDENTIFIER)+
 
@@ -310,14 +313,14 @@ array_literal ::= LBRACKET array_elements? RBRACKET
 array_elements ::= expression (COMMA expression)* COMMA?
                   | expression SEMICOLON expression
 
-object_literal ::= LBRACE object_fields? RBRACE
+object_literal ::= HASH LBRACE object_fields? RBRACE
 object_fields ::= object_field (COMMA object_field)* COMMA?
 object_field ::= (IDENTIFIER | string_expr | computed_property) COLON expression
                | spread_expr
 computed_property ::= LBRACKET expression RBRACKET
 spread_expr ::= '...' expression
 
-closure_expr ::= BOR closure_params? BOR (ARROW expression | block)
+closure_expr ::= BOR closure_params? BOR (block | expression)
 closure_params ::= closure_param (COMMA closure_param)* COMMA?
 closure_param ::= pattern (COLON type_annotation)?
 

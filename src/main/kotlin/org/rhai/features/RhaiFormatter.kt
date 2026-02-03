@@ -11,7 +11,7 @@ import org.rhai.lang.RhaiLanguage
 class RhaiFormatter : FormattingModelBuilder {
     override fun createModel(formattingContext: FormattingContext): FormattingModel {
         val settings = formattingContext.codeStyleSettings
-        val block = RhaiBlock(
+        val block = RhaiFormattingBlock(
             formattingContext.node,
             Wrap.createWrap(WrapType.NONE, false),
             Alignment.createAlignment(),
@@ -31,7 +31,7 @@ class RhaiFormatter : FormattingModelBuilder {
     }
 }
 
-class RhaiBlock(
+class RhaiFormattingBlock(
     private val node: ASTNode,
     private val wrap: Wrap?,
     private val alignment: Alignment?,

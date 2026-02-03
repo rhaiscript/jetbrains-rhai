@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew build:*)",
+      "Bash(./gradlew compileKotlin:*)",
+      "Bash(./gradlew:*)",
+      "Bash(JAVA_HOME=/Users/glebmikhailov/Library/Java/JavaVirtualMachines/jbr-17.0.9/Contents/Home ./gradlew generateParser:*)",
+      "Bash(JAVA_HOME=/Users/glebmikhailov/Library/Java/JavaVirtualMachines/jbr-17.0.9/Contents/Home ./gradlew compileKotlin:*)",
+      "Bash(JAVA_HOME=/Users/glebmikhailov/Library/Java/JavaVirtualMachines/jbr-17.0.9/Contents/Home ./gradlew clean build:*)",
+      "Bash(JAVA_HOME=/Users/glebmikhailov/Library/Java/JavaVirtualMachines/jbr-17.0.9/Contents/Home ./gradlew:*)"
+    ]
+  }
+}

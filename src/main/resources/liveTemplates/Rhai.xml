@@ -1,0 +1,231 @@
+<templateSet group="Rhai">
+    <!-- Function definition -->
+    <template name="fn" value="fn $NAME$($PARAMS$) {&#10;    $END$&#10;}" description="Function definition" toReformat="true" toShortenFQNames="false">
+        <variable name="NAME" expression="" defaultValue="&quot;function_name&quot;" alwaysStopAt="true"/>
+        <variable name="PARAMS" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Public function -->
+    <template name="pubfn" value="pub fn $NAME$($PARAMS$) {&#10;    $END$&#10;}" description="Public function definition" toReformat="true" toShortenFQNames="false">
+        <variable name="NAME" expression="" defaultValue="&quot;function_name&quot;" alwaysStopAt="true"/>
+        <variable name="PARAMS" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Private function -->
+    <template name="privfn" value="private fn $NAME$($PARAMS$) {&#10;    $END$&#10;}" description="Private function definition" toReformat="true" toShortenFQNames="false">
+        <variable name="NAME" expression="" defaultValue="&quot;function_name&quot;" alwaysStopAt="true"/>
+        <variable name="PARAMS" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Let declaration -->
+    <template name="let" value="let $NAME$ = $VALUE$;" description="Variable declaration" toReformat="true" toShortenFQNames="false">
+        <variable name="NAME" expression="" defaultValue="&quot;x&quot;" alwaysStopAt="true"/>
+        <variable name="VALUE" expression="" defaultValue="&quot;&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Const declaration -->
+    <template name="const" value="const $NAME$ = $VALUE$;" description="Constant declaration" toReformat="true" toShortenFQNames="false">
+        <variable name="NAME" expression="" defaultValue="&quot;CONSTANT&quot;" alwaysStopAt="true"/>
+        <variable name="VALUE" expression="" defaultValue="&quot;&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- If statement -->
+    <template name="if" value="if $CONDITION$ {&#10;    $END$&#10;}" description="If statement" toReformat="true" toShortenFQNames="false">
+        <variable name="CONDITION" expression="" defaultValue="&quot;true&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- If-else statement -->
+    <template name="ife" value="if $CONDITION$ {&#10;    $THEN$&#10;} else {&#10;    $ELSE$&#10;}" description="If-else statement" toReformat="true" toShortenFQNames="false">
+        <variable name="CONDITION" expression="" defaultValue="&quot;true&quot;" alwaysStopAt="true"/>
+        <variable name="THEN" expression="" defaultValue="" alwaysStopAt="true"/>
+        <variable name="ELSE" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- For loop with range -->
+    <template name="fori" value="for $VAR$ in 0..$END_RANGE$ {&#10;    $END$&#10;}" description="For loop with range" toReformat="true" toShortenFQNames="false">
+        <variable name="VAR" expression="" defaultValue="&quot;i&quot;" alwaysStopAt="true"/>
+        <variable name="END_RANGE" expression="" defaultValue="&quot;10&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- For loop with collection -->
+    <template name="for" value="for $VAR$ in $COLLECTION$ {&#10;    $END$&#10;}" description="For loop with collection" toReformat="true" toShortenFQNames="false">
+        <variable name="VAR" expression="" defaultValue="&quot;item&quot;" alwaysStopAt="true"/>
+        <variable name="COLLECTION" expression="" defaultValue="&quot;items&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- While loop -->
+    <template name="while" value="while $CONDITION$ {&#10;    $END$&#10;}" description="While loop" toReformat="true" toShortenFQNames="false">
+        <variable name="CONDITION" expression="" defaultValue="&quot;true&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Loop -->
+    <template name="loop" value="loop {&#10;    $END$&#10;    if $BREAK_CONDITION$ { break; }&#10;}" description="Infinite loop with break" toReformat="true" toShortenFQNames="false">
+        <variable name="BREAK_CONDITION" expression="" defaultValue="&quot;true&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Switch expression -->
+    <template name="switch" value="switch $EXPR$ {&#10;    $CASE$ => $RESULT$,&#10;    _ => $DEFAULT$&#10;}" description="Switch expression" toReformat="true" toShortenFQNames="false">
+        <variable name="EXPR" expression="" defaultValue="&quot;value&quot;" alwaysStopAt="true"/>
+        <variable name="CASE" expression="" defaultValue="&quot;case&quot;" alwaysStopAt="true"/>
+        <variable name="RESULT" expression="" defaultValue="&quot;result&quot;" alwaysStopAt="true"/>
+        <variable name="DEFAULT" expression="" defaultValue="&quot;()&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Try-catch -->
+    <template name="try" value="try {&#10;    $TRY$&#10;} catch ($ERR$) {&#10;    $CATCH$&#10;}" description="Try-catch block" toReformat="true" toShortenFQNames="false">
+        <variable name="TRY" expression="" defaultValue="" alwaysStopAt="true"/>
+        <variable name="ERR" expression="" defaultValue="&quot;err&quot;" alwaysStopAt="true"/>
+        <variable name="CATCH" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Closure -->
+    <template name="cl" value="|$PARAMS$| $BODY$" description="Closure expression" toReformat="true" toShortenFQNames="false">
+        <variable name="PARAMS" expression="" defaultValue="&quot;x&quot;" alwaysStopAt="true"/>
+        <variable name="BODY" expression="" defaultValue="&quot;x&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Closure with block -->
+    <template name="clb" value="|$PARAMS$| {&#10;    $END$&#10;}" description="Closure with block" toReformat="true" toShortenFQNames="false">
+        <variable name="PARAMS" expression="" defaultValue="&quot;x&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Map operation -->
+    <template name="map" value=".map(|$VAR$| $EXPR$)" description="Map operation" toReformat="true" toShortenFQNames="false">
+        <variable name="VAR" expression="" defaultValue="&quot;x&quot;" alwaysStopAt="true"/>
+        <variable name="EXPR" expression="" defaultValue="&quot;x&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Filter operation -->
+    <template name="filter" value=".filter(|$VAR$| $PREDICATE$)" description="Filter operation" toReformat="true" toShortenFQNames="false">
+        <variable name="VAR" expression="" defaultValue="&quot;x&quot;" alwaysStopAt="true"/>
+        <variable name="PREDICATE" expression="" defaultValue="&quot;true&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Reduce operation -->
+    <template name="reduce" value=".reduce($INITIAL$, |$ACC$, $VAR$| $EXPR$)" description="Reduce operation" toReformat="true" toShortenFQNames="false">
+        <variable name="INITIAL" expression="" defaultValue="&quot;0&quot;" alwaysStopAt="true"/>
+        <variable name="ACC" expression="" defaultValue="&quot;acc&quot;" alwaysStopAt="true"/>
+        <variable name="VAR" expression="" defaultValue="&quot;x&quot;" alwaysStopAt="true"/>
+        <variable name="EXPR" expression="" defaultValue="&quot;acc + x&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Print -->
+    <template name="pr" value="print($END$);" description="Print statement" toReformat="true" toShortenFQNames="false">
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Println -->
+    <template name="prl" value="println($END$);" description="Println statement" toReformat="true" toShortenFQNames="false">
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Debug -->
+    <template name="dbg" value="debug($END$);" description="Debug statement" toReformat="true" toShortenFQNames="false">
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Module -->
+    <template name="mod" value="module $NAME$;&#10;&#10;$END$" description="Module declaration" toReformat="true" toShortenFQNames="false">
+        <variable name="NAME" expression="" defaultValue="&quot;my_module&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Import -->
+    <template name="imp" value="import &quot;$MODULE$&quot;;" description="Import statement" toReformat="true" toShortenFQNames="false">
+        <variable name="MODULE" expression="" defaultValue="&quot;module&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Import as -->
+    <template name="impas" value="import &quot;$MODULE$&quot; as $ALIAS$;" description="Import with alias" toReformat="true" toShortenFQNames="false">
+        <variable name="MODULE" expression="" defaultValue="&quot;module&quot;" alwaysStopAt="true"/>
+        <variable name="ALIAS" expression="" defaultValue="&quot;m&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Object literal -->
+    <template name="obj" value="#{&#10;    $KEY$: $VALUE$,&#10;    $END$&#10;}" description="Object literal" toReformat="true" toShortenFQNames="false">
+        <variable name="KEY" expression="" defaultValue="&quot;key&quot;" alwaysStopAt="true"/>
+        <variable name="VALUE" expression="" defaultValue="&quot;value&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Test function -->
+    <template name="test" value="fn test_$NAME$() {&#10;    // Arrange&#10;    $ARRANGE$&#10;    &#10;    // Act&#10;    $ACT$&#10;    &#10;    // Assert&#10;    $ASSERT$&#10;}" description="Test function" toReformat="true" toShortenFQNames="false">
+        <variable name="NAME" expression="" defaultValue="&quot;something&quot;" alwaysStopAt="true"/>
+        <variable name="ARRANGE" expression="" defaultValue="" alwaysStopAt="true"/>
+        <variable name="ACT" expression="" defaultValue="" alwaysStopAt="true"/>
+        <variable name="ASSERT" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+</templateSet>

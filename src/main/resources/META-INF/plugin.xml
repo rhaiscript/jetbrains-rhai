@@ -1,18 +1,39 @@
 <idea-plugin>
     <id>org.rhai.rhai-highlight-plugin</id>
 
-    <name>Rhai-Highlight</name>
+    <name>Rhai Language Support</name>
+    <description><![CDATA[
+        <p>Full-featured language support for the <b>Rhai</b> scripting language.</p>
+
+        <h3>Features:</h3>
+        <ul>
+            <li>Syntax highlighting with customizable colors</li>
+            <li>Code completion for keywords, builtins, and user-defined symbols</li>
+            <li>Parameter info and documentation on hover</li>
+            <li>Go to definition and find usages</li>
+            <li>Code folding for functions, blocks, and comments</li>
+            <li>Structure view with filtering</li>
+            <li>Brace matching and auto-closing quotes</li>
+            <li>Code inspections and quick fixes</li>
+            <li>Live templates and snippets</li>
+            <li>Spell checking in comments and strings</li>
+            <li>Breadcrumb navigation</li>
+            <li>Surround with templates</li>
+            <li>Smart Enter completion</li>
+            <li>Intention actions and refactorings</li>
+            <li>Code style settings</li>
+        </ul>
+
+        <p>Rhai is a simple, fast, safe scripting language for Rust.</p>
+    ]]></description>
 
     <vendor email="gleb.mikhailov.04@gmail.com" url="www.linkedin.com/in/gleb-mikhailov">Gleb Mikhailov</vendor>
 
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
+
     <extensions defaultExtensionNs="com.intellij">
-        <internalFileTemplate name="Rhai File.rhai"/>
-
-        <gotoDeclarationHandler implementation="org.rhai.navigation.RhaiGotoDeclarationHandler"/>
-        
-        <colorSettingsPage
-                implementation="org.rhai.settings.RhaiColorSettingsPage"/>
-
+        <!-- File Type & Language -->
         <fileType name="Rhai File"
                   implementationClass="org.rhai.lang.RhaiFileType"
                   fieldName="INSTANCE"
@@ -22,28 +43,119 @@
         <lang.parserDefinition language="Rhai"
                                implementationClass="org.rhai.parser.RhaiParserDefinition"/>
 
+        <!-- Syntax Highlighting -->
         <lang.syntaxHighlighterFactory language="Rhai"
                                        implementationClass="org.rhai.highlighting.RhaiSyntaxHighlighterFactory"/>
+        <colorSettingsPage implementation="org.rhai.settings.RhaiColorSettingsPage"/>
+        <annotator language="Rhai" implementationClass="org.rhai.features.RhaiAnnotator"/>
 
+        <!-- Code Editing -->
         <lang.commenter language="Rhai" implementationClass="org.rhai.features.RhaiCommenter"/>
         <lang.braceMatcher language="Rhai" implementationClass="org.rhai.features.RhaiBraceMatcher"/>
+        <lang.foldingBuilder language="Rhai" implementationClass="org.rhai.features.RhaiFoldingBuilder"/>
         <lang.formatter language="Rhai" implementationClass="org.rhai.features.RhaiFormatter"/>
+        <quoteHandler fileType="Rhai File" className="org.rhai.features.RhaiQuoteHandler"/>
+        <lang.smartEnterProcessor language="Rhai"
+                                  implementationClass="org.rhai.features.RhaiSmartEnterProcessor"/>
 
-        <lang.findUsagesProvider language="Rhai"
-                                 implementationClass="org.rhai.features.RhaiFindUsagesProvider"/>
+        <!-- Code Style -->
+        <codeStyleSettingsProvider implementation="org.rhai.settings.RhaiCodeStyleSettingsProvider"/>
+        <langCodeStyleSettingsProvider implementation="org.rhai.settings.RhaiLanguageCodeStyleSettingsProvider"/>
+
+        <!-- Code Completion & Parameter Info -->
         <completion.contributor language="Rhai"
                                 implementationClass="org.rhai.features.RhaiCompletionContributor"/>
-        <annotator language="Rhai" implementationClass="org.rhai.features.RhaiAnnotator"/>
+        <codeInsight.parameterInfo language="Rhai"
+                                   implementationClass="org.rhai.features.RhaiParameterInfoHandler"/>
+
+        <!-- Navigation -->
+        <gotoDeclarationHandler implementation="org.rhai.navigation.RhaiGotoDeclarationHandler"/>
+        <lang.findUsagesProvider language="Rhai"
+                                 implementationClass="org.rhai.features.RhaiFindUsagesProvider"/>
         <psi.referenceContributor language="Rhai"
                                   implementation="org.rhai.features.RhaiReferenceContributor"/>
+        <breadcrumbsInfoProvider implementation="org.rhai.features.RhaiBreadcrumbsProvider"/>
+
+        <!-- Documentation -->
         <lang.documentationProvider language="Rhai"
                                     implementationClass="org.rhai.features.RhaiDocumentationProvider"/>
+
+        <!-- Structure View -->
         <lang.psiStructureViewFactory language="Rhai"
                                       implementationClass="org.rhai.features.RhaiStructureViewFactory"/>
 
+        <!-- Line Markers (Gutter Icons) -->
+        <codeInsight.lineMarkerProvider language="Rhai"
+                                        implementationClass="org.rhai.features.RhaiLineMarkerProvider"/>
+
+        <!-- Surround With -->
+        <lang.surroundDescriptor language="Rhai"
+                                 implementationClass="org.rhai.features.RhaiSurroundDescriptor"/>
+
+        <!-- Inspections -->
+        <localInspection language="Rhai"
+                         groupName="Rhai"
+                         displayName="Unused variable"
+                         enabledByDefault="true"
+                         level="WARNING"
+                         implementationClass="org.rhai.inspections.RhaiUnusedVariableInspection"/>
+
+        <localInspection language="Rhai"
+                         groupName="Rhai"
+                         displayName="Unresolved reference"
+                         enabledByDefault="true"
+                         level="ERROR"
+                         implementationClass="org.rhai.inspections.RhaiUnresolvedReferenceInspection"/>
+
+        <localInspection language="Rhai"
+                         groupName="Rhai"
+                         displayName="Duplicate function definition"
+                         enabledByDefault="true"
+                         level="ERROR"
+                         implementationClass="org.rhai.inspections.RhaiDuplicateFunctionInspection"/>
+
+        <!-- Intentions -->
+        <intentionAction>
+            <language>Rhai</language>
+            <className>org.rhai.intentions.ConvertLetToConstIntention</className>
+            <category>Rhai</category>
+        </intentionAction>
+        <intentionAction>
+            <language>Rhai</language>
+            <className>org.rhai.intentions.ConvertConstToLetIntention</className>
+            <category>Rhai</category>
+        </intentionAction>
+        <intentionAction>
+            <language>Rhai</language>
+            <className>org.rhai.intentions.AddTypeAnnotationIntention</className>
+            <category>Rhai</category>
+        </intentionAction>
+        <intentionAction>
+            <language>Rhai</language>
+            <className>org.rhai.intentions.AddReturnTypeIntention</className>
+            <category>Rhai</category>
+        </intentionAction>
+        <intentionAction>
+            <language>Rhai</language>
+            <className>org.rhai.intentions.ToggleFunctionVisibilityIntention</className>
+            <category>Rhai</category>
+        </intentionAction>
+
+        <!-- Spell Checking -->
+        <spellchecker.support language="Rhai"
+                              implementationClass="org.rhai.features.RhaiSpellcheckingStrategy"/>
+
+        <!-- Live Templates -->
+        <liveTemplateContext implementation="org.rhai.features.RhaiLiveTemplateContext"
+                             contextId="RHAI"/>
+        <defaultLiveTemplates file="/liveTemplates/Rhai.xml"/>
+
+        <!-- Settings & Services -->
         <projectService serviceImplementation="org.rhai.settings.RhaiSettings"/>
 
+        <!-- File Templates -->
         <fileTemplateGroup implementation="org.rhai.file.RhaiTemplatesProvider"/>
+        <internalFileTemplate name="Rhai File.rhai"/>
 
     </extensions>
 

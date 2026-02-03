@@ -24,10 +24,10 @@ class RhaiParserDefinition : ParserDefinition {
 
         // Комментарии
         val COMMENTS = TokenSet.create(
-//            RhaiTypes.LINE_COMMENT,
-//            RhaiTypes.BLOCK_COMMENT,
-//            RhaiTypes.DOC_COMMENT,
-//            RhaiTypes.DOC_LINE
+            RhaiTypes.LINE_COMMENT,
+            RhaiTypes.BLOCK_COMMENT,
+            RhaiTypes.DOC_COMMENT,
+            RhaiTypes.DOC_LINE
         )
 
         // Строковые литералы
@@ -151,8 +151,7 @@ class RhaiParserDefinition : ParserDefinition {
 
         // Идентификаторы
         val IDENTIFIERS = TokenSet.create(
-            RhaiTypes.IDENTIFIER,
-            RhaiTypes.BUILTIN
+            RhaiTypes.IDENTIFIER
         )
 
         // Прочие токены

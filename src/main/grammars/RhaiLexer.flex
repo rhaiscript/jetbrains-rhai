@@ -40,14 +40,19 @@ import org.rhai.RhaiTypes;
     }
 
     private void pushBrace() {
-        braceStack.push(braceStack.isEmpty() ? 1 : braceStack.peek() + 1);
+        if (braceStack.isEmpty()) {
+            braceStack.push(1);
+        } else {
+            int current = braceStack.pop();
+            braceStack.push(current + 1);
+        }
     }
 
     private void popBrace() {
         if (!braceStack.isEmpty()) {
-            int depth = braceStack.pop() - 1;
-            if (depth > 0) {
-                braceStack.push(depth);
+            int current = braceStack.pop();
+            if (current > 1) {
+                braceStack.push(current - 1);
             }
         }
     }
@@ -203,8 +208,7 @@ SHEBANG         = "#!"[^\r\n]*
     "-inf"              { return RhaiTypes.NEG_INF; }
     "NaN"               { return RhaiTypes.NAN; }
 
-    // Идентификаторы
-    {BUILTIN_FUNC}      { return RhaiTypes.BUILTIN; }
+    // Идентификаторы (встроенные функции подсвечиваются в аннотаторе)
     {IDENTIFIER}        { return RhaiTypes.IDENTIFIER; }
 
     // Операторы (от длинных к коротким)
@@ -268,7 +272,7 @@ SHEBANG         = "#!"[^\r\n]*
                           if (inInterpolation()) {
                               popBrace();
                               if (!inInterpolation()) {
-                                  yybegin(IN_INTERPOLATED_STRING);
+                                  popState(); // Properly return to IN_INTERPOLATED_STRING
                                   return RhaiTypes.INTERPOLATED_EXPR_END;
                               }
                           }
