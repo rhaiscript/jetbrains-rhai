@@ -7,12 +7,10 @@ import com.intellij.icons.AllIcons
 import com.intellij.patterns.PlatformPatterns
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.psi.util.elementType
 import com.intellij.util.ProcessingContext
 import org.rhai.*
 import org.rhai.lang.RhaiFile
 import org.rhai.settings.RhaiCustomRegistrySettings
-import javax.swing.Icon
 
 class RhaiCompletionContributor : CompletionContributor() {
 

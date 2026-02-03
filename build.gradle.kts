@@ -3,10 +3,11 @@ plugins {
     id("org.jetbrains.grammarkit") version "2022.3.1"
     id("org.jetbrains.kotlin.jvm") version "1.9.24"
     id("org.jetbrains.intellij") version "1.16.1"
+    id("io.gitlab.arturbosch.detekt") version "1.23.4"
 }
 
 group = "org.rhai"
-version = "1.0-SNAPSHOT"
+version = "1.0.0"
 
 repositories {
     mavenCentral()
@@ -42,26 +43,42 @@ java {
 intellij {
     version.set("2023.3")
     type.set("IC")
+}
 
-//    plugins.set(listOf("org.intellij.intellij.grammarKit"))
+detekt {
+    config.setFrom(file("detekt.yml"))
+    buildUponDefaultConfig = true
+    source.setFrom(
+        "src/main/kotlin"
+    )
 }
 
 tasks {
-    // Set the JVM compatibility versions
     withType<JavaCompile> {
         sourceCompatibility = "17"
         targetCompatibility = "17"
     }
+
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
         kotlinOptions.jvmTarget = "17"
     }
+
     withType<Copy> {
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     }
 
+    withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+        reports {
+            html.required.set(true)
+            xml.required.set(false)
+            txt.required.set(false)
+            sarif.required.set(false)
+        }
+    }
+
     patchPluginXml {
         sinceBuild.set("231")
-        untilBuild.set("241.*")
+        untilBuild.set("243.*")
     }
 
     signPlugin {

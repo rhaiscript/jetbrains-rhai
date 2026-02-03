@@ -164,6 +164,12 @@
         <fileTemplateGroup implementation="org.rhai.file.RhaiTemplatesProvider"/>
         <internalFileTemplate name="Rhai File.rhai"/>
 
+        <!-- Run Configuration -->
+        <configurationType implementation="org.rhai.run.RhaiRunConfigurationType"/>
+        <runConfigurationProducer implementation="org.rhai.run.RhaiRunConfigurationProducer"/>
+        <runLineMarkerContributor language="Rhai"
+                                  implementationClass="org.rhai.run.RhaiRunLineMarkerProvider"/>
+
     </extensions>
 
     <actions>

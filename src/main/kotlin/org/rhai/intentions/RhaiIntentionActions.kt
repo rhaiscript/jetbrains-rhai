@@ -6,7 +6,6 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.psi.util.elementType
 import org.rhai.*
 import org.rhai.lang.RhaiFile
 
@@ -213,7 +212,6 @@ class AddReturnTypeIntention : PsiElementBaseIntentionAction(), IntentionAction 
         val insertOffset = if (params != null) {
             params.textRange.endOffset + 1 // After RPAREN
         } else {
-            val lparen = funcDef.node.findChildByType(RhaiTypes.LPAREN)
             val rparen = funcDef.node.findChildByType(RhaiTypes.RPAREN)
             rparen?.textRange?.endOffset ?: return
         }

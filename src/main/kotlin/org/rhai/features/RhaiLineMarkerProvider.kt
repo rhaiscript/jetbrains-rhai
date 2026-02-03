@@ -2,7 +2,6 @@ package org.rhai.features
 
 import com.intellij.codeInsight.daemon.LineMarkerInfo
 import com.intellij.codeInsight.daemon.LineMarkerProvider
-import com.intellij.codeInsight.daemon.NavigateAction
 import com.intellij.codeInsight.navigation.NavigationGutterIconBuilder
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.editor.markup.GutterIconRenderer
@@ -11,7 +10,6 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import org.rhai.*
 import org.rhai.lang.RhaiFile
-import org.rhai.lang.RhaiIcons
 import javax.swing.Icon
 
 class RhaiLineMarkerProvider : LineMarkerProvider {

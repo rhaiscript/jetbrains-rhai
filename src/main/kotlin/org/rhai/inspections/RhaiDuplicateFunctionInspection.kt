@@ -16,8 +16,6 @@ class RhaiDuplicateFunctionInspection : RhaiInspectionBase() {
 
     override fun buildRhaiVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
         return object : PsiElementVisitor() {
-            private val seenFunctions = mutableMapOf<String, RhaiFunctionDefinition>()
-
             override fun visitElement(element: PsiElement) {
                 if (element is RhaiFile) {
                     checkDuplicateFunctions(element, holder)

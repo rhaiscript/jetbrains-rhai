@@ -22,7 +22,6 @@ class RhaiParserDefinition : ParserDefinition {
         val FILE = IFileElementType(RhaiLanguage.INSTANCE)
         val WHITE_SPACES = TokenSet.create(TokenType.WHITE_SPACE)
 
-        // Комментарии
         val COMMENTS = TokenSet.create(
             RhaiTypes.LINE_COMMENT,
             RhaiTypes.BLOCK_COMMENT,
@@ -30,25 +29,13 @@ class RhaiParserDefinition : ParserDefinition {
             RhaiTypes.DOC_LINE
         )
 
-        // Строковые литералы
         val STRING_LITERALS = TokenSet.create(
-//            RhaiTypes.STRING,
-//            RhaiTypes.RAW_STRING,
-//            RhaiTypes.MULTILINE_STRING,
             RhaiTypes.CHAR_LITERAL,
-            RhaiTypes.REGEX_LITERAL,
-//            RhaiTypes.INTERPOLATED_START,
-//            RhaiTypes.INTERPOLATED_END,
-//            RhaiTypes.INTERPOLATED_TEXT
+            RhaiTypes.REGEX_LITERAL
         )
 
-        // Числовые литералы
-        val NUMBER_LITERALS = TokenSet.create(
-//            RhaiTypes.INTEGER,
-//            RhaiTypes.FLOAT
-        )
+        val NUMBER_LITERALS = TokenSet.create()
 
-        // Ключевые слова
         val KEYWORDS = TokenSet.create(
             RhaiTypes.FN,
             RhaiTypes.LET,
@@ -80,7 +67,6 @@ class RhaiParserDefinition : ParserDefinition {
             RhaiTypes.PUB
         )
 
-        // Литералы констант
         val CONSTANT_LITERALS = TokenSet.create(
             RhaiTypes.TRUE,
             RhaiTypes.FALSE,
@@ -88,7 +74,6 @@ class RhaiParserDefinition : ParserDefinition {
             RhaiTypes.UNDEF
         )
 
-        // Операторы
         val OPERATORS = TokenSet.create(
             RhaiTypes.PLUS,
             RhaiTypes.MINUS,
@@ -133,7 +118,6 @@ class RhaiParserDefinition : ParserDefinition {
             RhaiTypes.OR
         )
 
-        // Скобки
         val BRACES = TokenSet.create(
             RhaiTypes.LBRACE,
             RhaiTypes.RBRACE
@@ -149,24 +133,9 @@ class RhaiParserDefinition : ParserDefinition {
             RhaiTypes.RPAREN
         )
 
-        // Идентификаторы
         val IDENTIFIERS = TokenSet.create(
             RhaiTypes.IDENTIFIER
         )
-
-        // Прочие токены
-//        val OTHER_TOKENS = TokenSet.create(
-//            RhaiTypes.HASH,
-//            RhaiTypes.SHEBANG_TOKEN,
-//            RhaiTypes.INTERPOLATED_EXPR_START,
-//            RhaiTypes.INTERPOLATED_EXPR_END
-//        )
-//
-//        // Ошибочные токены
-//        val ERROR_TOKENS = TokenSet.create(
-//            RhaiTypes.INVALID_OP,
-//            RhaiTypes.INVALID_ESCAPE
-//        )
     }
 
     override fun createLexer(project: Project): Lexer = RhaiFlexAdapter.INSTANCE
@@ -189,10 +158,7 @@ class RhaiParserDefinition : ParserDefinition {
         return RhaiFile(viewProvider)
     }
 
-    // Опциональные методы для лучшей интеграции
-
     override fun spaceExistenceTypeBetweenTokens(left: ASTNode?, right: ASTNode?): ParserDefinition.SpaceRequirements {
-        // Определяем, нужен ли пробел между токенами
         if (left == null || right == null) {
             return ParserDefinition.SpaceRequirements.MAY
         }
@@ -200,7 +166,6 @@ class RhaiParserDefinition : ParserDefinition {
         val leftType = left.elementType
         val rightType = right.elementType
 
-        // Не нужен пробел между этими парами токенов:
         if (leftType == RhaiTypes.DOT && rightType == RhaiTypes.IDENTIFIER) {
             return ParserDefinition.SpaceRequirements.MUST_NOT
         }

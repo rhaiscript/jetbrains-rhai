@@ -7,7 +7,9 @@
       "Bash(JAVA_HOME=/Users/glebmikhailov/Library/Java/JavaVirtualMachines/jbr-17.0.9/Contents/Home ./gradlew generateParser:*)",
       "Bash(JAVA_HOME=/Users/glebmikhailov/Library/Java/JavaVirtualMachines/jbr-17.0.9/Contents/Home ./gradlew compileKotlin:*)",
       "Bash(JAVA_HOME=/Users/glebmikhailov/Library/Java/JavaVirtualMachines/jbr-17.0.9/Contents/Home ./gradlew clean build:*)",
-      "Bash(JAVA_HOME=/Users/glebmikhailov/Library/Java/JavaVirtualMachines/jbr-17.0.9/Contents/Home ./gradlew:*)"
+      "Bash(JAVA_HOME=/Users/glebmikhailov/Library/Java/JavaVirtualMachines/jbr-17.0.9/Contents/Home ./gradlew:*)",
+      "Bash(java:*)",
+      "Bash(export JAVA_HOME=/opt/homebrew/Cellar/openjdk@17/17.0.16/libexec/openjdk.jdk/Contents/Home)"
     ]
   }
 }

@@ -25,7 +25,7 @@ class RhaiSurroundDescriptor : SurroundDescriptor {
         if (file !is RhaiFile) return PsiElement.EMPTY_ARRAY
 
         val startElement = file.findElementAt(startOffset) ?: return PsiElement.EMPTY_ARRAY
-        val endElement = file.findElementAt(endOffset - 1) ?: return PsiElement.EMPTY_ARRAY
+        file.findElementAt(endOffset - 1) ?: return PsiElement.EMPTY_ARRAY
 
         // Find statements or expressions in the range
         val statement = PsiTreeUtil.getParentOfType(startElement, RhaiStatement::class.java)

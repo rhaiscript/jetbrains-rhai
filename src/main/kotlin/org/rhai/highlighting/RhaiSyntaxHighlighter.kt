@@ -10,8 +10,6 @@ import com.intellij.psi.TokenType
 import com.intellij.psi.tree.IElementType
 import org.rhai.RhaiFlexAdapter
 import org.rhai.RhaiTypes
-import org.rhai.lang.RhaiLanguage
-import org.rhai.lexer.RhaiHighlightingLexer
 
 
 class RhaiSyntaxHighlighter : SyntaxHighlighterBase() {
@@ -20,48 +18,30 @@ class RhaiSyntaxHighlighter : SyntaxHighlighterBase() {
 
     override fun getTokenHighlights(tokenType: IElementType?): Array<TextAttributesKey> {
         return when (tokenType) {
-            // === Комментарии ===
-            RhaiTypes.LINE_COMMENT ->
-                LINE_COMMENT_KEYS
+            // Comments
+            RhaiTypes.LINE_COMMENT -> LINE_COMMENT_KEYS
+            RhaiTypes.DOC_LINE, RhaiTypes.DOC_COMMENT -> DOC_COMMENT_KEYS
+            RhaiTypes.BLOCK_COMMENT -> BLOCK_COMMENT_KEYS
 
-            RhaiTypes.DOC_LINE, RhaiTypes.DOC_COMMENT ->
-                DOC_COMMENT_KEYS
+            // Strings and characters
+            RhaiTypes.STRING_LITERAL, RhaiTypes.MULTILINE_STRING_LITERAL -> STRING_KEYS
+            RhaiTypes.RAW_STRING_LITERAL -> RAW_STRING_KEYS
+            RhaiTypes.CHAR_LITERAL -> CHAR_KEYS
+            RhaiTypes.INTERPOLATED_TEXT -> INTERPOLATION_KEYS
+            RhaiTypes.INTERPOLATED_START, RhaiTypes.INTERPOLATED_END -> INTERPOLATION_KEYS
+            RhaiTypes.INTERPOLATED_EXPR_START, RhaiTypes.INTERPOLATED_EXPR_END -> INTERPOLATION_MARKER_KEYS
 
-            RhaiTypes.BLOCK_COMMENT ->
-                BLOCK_COMMENT_KEYS
+            // Regex literals
+            RhaiTypes.REGEX_LITERAL -> REGEX_KEYS
 
-            // === Строки и символы ===
-            RhaiTypes.STRING_LITERAL, RhaiTypes.MULTILINE_STRING_LITERAL ->
-                STRING_KEYS
-
-            RhaiTypes.RAW_STRING_LITERAL ->
-                RAW_STRING_KEYS
-
-            RhaiTypes.CHAR_LITERAL ->
-                CHAR_KEYS
-
-            RhaiTypes.INTERPOLATED_TEXT ->
-                INTERPOLATION_KEYS
-
-            RhaiTypes.INTERPOLATED_START, RhaiTypes.INTERPOLATED_END ->
-                INTERPOLATION_KEYS
-
-            RhaiTypes.INTERPOLATED_EXPR_START, RhaiTypes.INTERPOLATED_EXPR_END ->
-                INTERPOLATION_MARKER_KEYS
-
-            // === Регулярные выражения (отдельный стиль) ===
-            RhaiTypes.REGEX_LITERAL ->
-                REGEX_KEYS
-
-            // === Числовые литералы ===
+            // Numeric literals
             RhaiTypes.INTEGER_LITERAL,
             RhaiTypes.FLOAT_LITERAL,
             RhaiTypes.INF,
             RhaiTypes.NEG_INF,
-            RhaiTypes.NAN ->
-                NUMBER_KEYS
+            RhaiTypes.NAN -> NUMBER_KEYS
 
-            // === Ключевые слова управления потоком ===
+            // Control flow keywords
             RhaiTypes.IF, RhaiTypes.ELSE,
             RhaiTypes.WHILE, RhaiTypes.FOR,
             RhaiTypes.DO, RhaiTypes.LOOP,
@@ -69,10 +49,9 @@ class RhaiSyntaxHighlighter : SyntaxHighlighterBase() {
             RhaiTypes.RETURN, RhaiTypes.THROW,
             RhaiTypes.SWITCH, RhaiTypes.DEFAULT,
             RhaiTypes.TRY, RhaiTypes.CATCH,
-            RhaiTypes.UNTIL ->
-                CONTROL_KEYWORD_KEYS
+            RhaiTypes.UNTIL -> CONTROL_KEYWORD_KEYS
 
-            // === Другие ключевые слова ===
+            // Other keywords
             RhaiTypes.FN, RhaiTypes.LET, RhaiTypes.CONST,
             RhaiTypes.IN, RhaiTypes.IMPORT, RhaiTypes.EXPORT,
             RhaiTypes.AS, RhaiTypes.MODULE,
@@ -80,22 +59,18 @@ class RhaiSyntaxHighlighter : SyntaxHighlighterBase() {
             RhaiTypes.THIS, RhaiTypes.GLOBAL,
             RhaiTypes.IS, RhaiTypes.SHARED, RhaiTypes.SYNC,
             RhaiTypes.ASYNC, RhaiTypes.AWAIT,
-            RhaiTypes.UNDEF ->
-                KEYWORD_KEYS
+            RhaiTypes.UNDEF -> KEYWORD_KEYS
 
-            // === Булевы значения и null (как ключевые слова) ===
-            RhaiTypes.TRUE, RhaiTypes.FALSE, RhaiTypes.NULL ->
-                KEYWORD_KEYS
+            // Boolean values and null
+            RhaiTypes.TRUE, RhaiTypes.FALSE, RhaiTypes.NULL -> KEYWORD_KEYS
 
-            // === Стрелки ===
-            RhaiTypes.ARROW, RhaiTypes.THIN_ARROW, RhaiTypes.LEFT_ARROW ->
-                ARROW_KEYS
+            // Arrows
+            RhaiTypes.ARROW, RhaiTypes.THIN_ARROW, RhaiTypes.LEFT_ARROW -> ARROW_KEYS
 
-            // === Диапазоны ===
-            RhaiTypes.RANGE, RhaiTypes.DOT_DOT_EQ ->
-                RANGE_KEYS
+            // Ranges
+            RhaiTypes.RANGE, RhaiTypes.DOT_DOT_EQ -> RANGE_KEYS
 
-            // === Операторы ===
+            // Operators
             RhaiTypes.PLUS, RhaiTypes.MINUS, RhaiTypes.MUL,
             RhaiTypes.DIV, RhaiTypes.MOD, RhaiTypes.POW,
             RhaiTypes.EQ, RhaiTypes.NE, RhaiTypes.LT,
@@ -112,53 +87,41 @@ class RhaiSyntaxHighlighter : SyntaxHighlighterBase() {
             RhaiTypes.SHR_ASSIGN, RhaiTypes.POW_ASSIGN,
             RhaiTypes.DOUBLE_COLON, RhaiTypes.NULL_COALESCING,
             RhaiTypes.QUESTION, RhaiTypes.AT, RhaiTypes.HASH,
-            RhaiTypes.DOLLAR, RhaiTypes.TILDE ->
-                OPERATOR_KEYS
+            RhaiTypes.DOLLAR, RhaiTypes.TILDE -> OPERATOR_KEYS
 
-            // === Точка ===
-            RhaiTypes.DOT ->
-                DOT_KEYS
+            // Dot
+            RhaiTypes.DOT -> DOT_KEYS
 
-            // === Двоеточие ===
-            RhaiTypes.COLON ->
-                COLON_KEYS
+            // Colon
+            RhaiTypes.COLON -> COLON_KEYS
 
-            // === Скобки ===
-            RhaiTypes.LPAREN, RhaiTypes.RPAREN ->
-                PARENTHESIS_KEYS
+            // Parentheses
+            RhaiTypes.LPAREN, RhaiTypes.RPAREN -> PARENTHESIS_KEYS
 
-            RhaiTypes.LBRACE, RhaiTypes.RBRACE ->
-                BRACES_KEYS
+            // Braces
+            RhaiTypes.LBRACE, RhaiTypes.RBRACE -> BRACES_KEYS
 
-            RhaiTypes.LBRACKET, RhaiTypes.RBRACKET ->
-                BRACKETS_KEYS
+            // Brackets
+            RhaiTypes.LBRACKET, RhaiTypes.RBRACKET -> BRACKETS_KEYS
 
-            // === Разделители ===
-            RhaiTypes.COMMA ->
-                COMMA_KEYS
+            // Delimiters
+            RhaiTypes.COMMA -> COMMA_KEYS
+            RhaiTypes.SEMICOLON -> SEMICOLON_KEYS
 
-            RhaiTypes.SEMICOLON ->
-                SEMICOLON_KEYS
+            // Shebang (treated as comment)
+            RhaiTypes.SHEBANG -> LINE_COMMENT_KEYS
 
-            // === Shebang (как комментарий) ===
-            RhaiTypes.SHEBANG ->
-                LINE_COMMENT_KEYS
-
-            // === Ошибочные символы ===
-            TokenType.BAD_CHARACTER ->
-                BAD_CHARACTER_KEYS
+            // Bad characters
+            TokenType.BAD_CHARACTER -> BAD_CHARACTER_KEYS
 
             GeneratedParserUtilBase.DUMMY_BLOCK -> FUNCTION_KEYS
 
-            // === Идентификаторы и прочее - без подсветки ===
-            else ->
-                emptyArray()
+            // Identifiers and other tokens - no highlighting
+            else -> emptyArray()
         }
     }
 
     companion object {
-        // --- Определения атрибутов ---
-
         val INSTANCE = RhaiSyntaxHighlighter()
 
         // Comments
@@ -300,7 +263,6 @@ class RhaiSyntaxHighlighter : SyntaxHighlighterBase() {
             DefaultLanguageHighlighterColors.STATIC_METHOD
         )
 
-        // --- Массивы для возврата (оптимизация) ---
         private val LINE_COMMENT_KEYS = arrayOf(LINE_COMMENT)
         private val BLOCK_COMMENT_KEYS = arrayOf(BLOCK_COMMENT)
         private val DOC_COMMENT_KEYS = arrayOf(DOC_COMMENT)
@@ -313,7 +275,6 @@ class RhaiSyntaxHighlighter : SyntaxHighlighterBase() {
         private val NUMBER_KEYS = arrayOf(NUMBER)
         private val KEYWORD_KEYS = arrayOf(KEYWORD)
         private val CONTROL_KEYWORD_KEYS = arrayOf(CONTROL_KEYWORD)
-        private val BUILTIN_KEYS = arrayOf(BUILTIN)
         private val OPERATOR_KEYS = arrayOf(OPERATOR)
         private val ARROW_KEYS = arrayOf(ARROW)
         private val RANGE_KEYS = arrayOf(RANGE)
