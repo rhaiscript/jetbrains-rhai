@@ -145,6 +145,12 @@
         <spellchecker.support language="Rhai"
                               implementationClass="org.rhai.features.RhaiSpellcheckingStrategy"/>
 
+        <!-- Refactoring -->
+        <lang.namesValidator language="Rhai"
+                             implementationClass="org.rhai.refactoring.RhaiNamesValidator"/>
+        <renameHandler implementation="org.rhai.refactoring.RhaiRenameHandler"/>
+        <renamePsiElementProcessor implementation="org.rhai.refactoring.RhaiRenamePsiElementProcessor"/>
+
         <!-- Live Templates -->
         <liveTemplateContext implementation="org.rhai.features.RhaiLiveTemplateContext"
                              contextId="RHAI"/>
