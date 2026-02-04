@@ -228,4 +228,121 @@
             <option name="RHAI" value="true"/>
         </context>
     </template>
+
+    <!-- Public constant -->
+    <template name="pubconst" value="pub const $NAME$ = $VALUE$;" description="Public constant" toReformat="true" toShortenFQNames="false">
+        <variable name="NAME" expression="" defaultValue="&quot;CONSTANT&quot;" alwaysStopAt="true"/>
+        <variable name="VALUE" expression="" defaultValue="&quot;&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Return statement -->
+    <template name="ret" value="return $VALUE$;" description="Return statement" toReformat="true" toShortenFQNames="false">
+        <variable name="VALUE" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Throw statement -->
+    <template name="throw" value="throw &quot;$MESSAGE$&quot;;" description="Throw statement" toReformat="true" toShortenFQNames="false">
+        <variable name="MESSAGE" expression="" defaultValue="&quot;Error message&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- some operation -->
+    <template name="some" value=".some(|$VAR$| $PREDICATE$)" description="Check if any element matches" toReformat="true" toShortenFQNames="false">
+        <variable name="VAR" expression="" defaultValue="&quot;x&quot;" alwaysStopAt="true"/>
+        <variable name="PREDICATE" expression="" defaultValue="&quot;true&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- all operation -->
+    <template name="all" value=".all(|$VAR$| $PREDICATE$)" description="Check if all elements match" toReformat="true" toShortenFQNames="false">
+        <variable name="VAR" expression="" defaultValue="&quot;x&quot;" alwaysStopAt="true"/>
+        <variable name="PREDICATE" expression="" defaultValue="&quot;true&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- find operation -->
+    <template name="find" value=".find(|$VAR$| $PREDICATE$)" description="Find first matching element" toReformat="true" toShortenFQNames="false">
+        <variable name="VAR" expression="" defaultValue="&quot;x&quot;" alwaysStopAt="true"/>
+        <variable name="PREDICATE" expression="" defaultValue="&quot;true&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- for_each operation -->
+    <template name="foreach" value=".for_each(|$VAR$| {&#10;    $END$&#10;});" description="Execute action for each element" toReformat="true" toShortenFQNames="false">
+        <variable name="VAR" expression="" defaultValue="&quot;x&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- if-else if chain -->
+    <template name="ifelif" value="if $COND1$ {&#10;    $THEN1$&#10;} else if $COND2$ {&#10;    $THEN2$&#10;} else {&#10;    $ELSE$&#10;}" description="If-else if chain" toReformat="true" toShortenFQNames="false">
+        <variable name="COND1" expression="" defaultValue="&quot;condition1&quot;" alwaysStopAt="true"/>
+        <variable name="THEN1" expression="" defaultValue="" alwaysStopAt="true"/>
+        <variable name="COND2" expression="" defaultValue="&quot;condition2&quot;" alwaysStopAt="true"/>
+        <variable name="THEN2" expression="" defaultValue="" alwaysStopAt="true"/>
+        <variable name="ELSE" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Guard clause -->
+    <template name="guard" value="if $CONDITION$ {&#10;    return $EARLY_RETURN$;&#10;}" description="Guard clause (early return)" toReformat="true" toShortenFQNames="false">
+        <variable name="CONDITION" expression="" defaultValue="&quot;!condition&quot;" alwaysStopAt="true"/>
+        <variable name="EARLY_RETURN" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Array literal -->
+    <template name="arr" value="[$END$]" description="Array literal" toReformat="true" toShortenFQNames="false">
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Function with return type -->
+    <template name="fnr" value="fn $NAME$($PARAMS$) -> $RETURN_TYPE$ {&#10;    $END$&#10;}" description="Function with return type" toReformat="true" toShortenFQNames="false">
+        <variable name="NAME" expression="" defaultValue="&quot;function_name&quot;" alwaysStopAt="true"/>
+        <variable name="PARAMS" expression="" defaultValue="" alwaysStopAt="true"/>
+        <variable name="RETURN_TYPE" expression="" defaultValue="&quot;Dynamic&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Print with format -->
+    <template name="prf" value="print(`$FORMAT$`);" description="Print with string interpolation" toReformat="true" toShortenFQNames="false">
+        <variable name="FORMAT" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
+
+    <!-- Doc comment -->
+    <template name="doc" value="/// $DESCRIPTION$&#10;///&#10;/// # Arguments&#10;/// * `$PARAM$` - $PARAM_DESC$&#10;///&#10;/// # Returns&#10;/// $RETURN_DESC$" description="Documentation comment" toReformat="true" toShortenFQNames="false">
+        <variable name="DESCRIPTION" expression="" defaultValue="&quot;Brief description&quot;" alwaysStopAt="true"/>
+        <variable name="PARAM" expression="" defaultValue="&quot;param&quot;" alwaysStopAt="true"/>
+        <variable name="PARAM_DESC" expression="" defaultValue="&quot;parameter description&quot;" alwaysStopAt="true"/>
+        <variable name="RETURN_DESC" expression="" defaultValue="&quot;return value description&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="RHAI" value="true"/>
+        </context>
+    </template>
 </templateSet>

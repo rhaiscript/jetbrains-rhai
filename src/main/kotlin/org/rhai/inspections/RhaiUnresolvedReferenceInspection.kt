@@ -1,5 +1,6 @@
 package org.rhai.inspections
 
+import com.intellij.codeInspection.LocalQuickFix
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElement
@@ -8,6 +9,7 @@ import com.intellij.psi.TokenType
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import org.rhai.*
+import org.rhai.features.RhaiProjectSymbolsProvider
 import org.rhai.lang.RhaiFile
 import org.rhai.registry.RhaiRegistryProvider
 
@@ -76,19 +78,25 @@ class RhaiUnresolvedReferenceInspection : RhaiInspectionBase() {
         if (isFunctionCall) {
             // Check if function is defined
             if (!isFunctionDefined(file, name) && !BUILTIN_FUNCTIONS.contains(name)) {
+                // Check if function exists in other files for import suggestion
+                val quickFixes = createImportQuickFixes(element, name, isFunction = true)
                 holder.registerProblem(
                     element,
                     "Unresolved function '$name'",
-                    ProblemHighlightType.LIKE_UNKNOWN_SYMBOL
+                    ProblemHighlightType.LIKE_UNKNOWN_SYMBOL,
+                    *quickFixes
                 )
             }
         } else {
             // Check if variable is defined
             if (!isVariableDefined(file, name, element.textOffset)) {
+                // Check if variable/constant exists in other files for import suggestion
+                val quickFixes = createImportQuickFixes(element, name, isFunction = false)
                 holder.registerProblem(
                     element,
                     "Unresolved reference '$name'",
-                    ProblemHighlightType.LIKE_UNKNOWN_SYMBOL
+                    ProblemHighlightType.LIKE_UNKNOWN_SYMBOL,
+                    *quickFixes
                 )
             }
         }
@@ -300,6 +308,25 @@ class RhaiUnresolvedReferenceInspection : RhaiInspectionBase() {
             return true
         }
 
+        // Also check file-level (global) let declarations if we're inside a function
+        if (enclosingScope != file) {
+            val allLetDecls = PsiTreeUtil.findChildrenOfType(file, RhaiLetDeclaration::class.java)
+            // Filter to only top-level let declarations (parent is file or a statement at file level)
+            val globalLetDecls = allLetDecls.filter { letDecl ->
+                var parent = letDecl.parent
+                while (parent != null && parent !is RhaiFile) {
+                    if (parent is RhaiFunctionDefinition || parent is RhaiClosureExpr) {
+                        return@filter false  // Inside a function/closure, not global
+                    }
+                    parent = parent.parent
+                }
+                true  // Is at file level
+            }
+            if (globalLetDecls.any { getPatternName(it.pattern) == name && it.textOffset < offset }) {
+                return true
+            }
+        }
+
         // Check const declarations (visible from anywhere in file)
         val constDecls = PsiTreeUtil.findChildrenOfType(file, RhaiConstDeclaration::class.java)
         if (constDecls.any { getPatternName(it.pattern) == name }) {
@@ -311,11 +338,20 @@ class RhaiUnresolvedReferenceInspection : RhaiInspectionBase() {
         val scopeStartOffset = enclosingScope.textOffset
         val relativeOffset = offset - scopeStartOffset
 
-        // Check for let declaration before current position
+        // Check for let declaration before current position in local scope
         val letPattern = Regex("""let\s+${Regex.escape(name)}\s*[=;:\[]""")
         letPattern.find(scopeText)?.let { match ->
             if (match.range.first < relativeOffset) {
                 return true
+            }
+        }
+
+        // Also check for global let declaration in file (if we're inside a function)
+        if (enclosingScope != file) {
+            letPattern.find(file.text)?.let { match ->
+                if (match.range.first < offset) {
+                    return true
+                }
             }
         }
 
@@ -326,6 +362,35 @@ class RhaiUnresolvedReferenceInspection : RhaiInspectionBase() {
         }
 
         return false
+    }
+
+    private fun createImportQuickFixes(element: PsiElement, name: String, isFunction: Boolean): Array<LocalQuickFix> {
+        val file = element.containingFile as? RhaiFile ?: return emptyArray()
+        val virtualFile = file.virtualFile ?: return emptyArray()
+        val project = element.project
+
+        // Find all symbols with this name in other files (both public and private)
+        val symbols = RhaiProjectSymbolsProvider.findExportedSymbols(project, name, virtualFile)
+
+        if (symbols.isEmpty()) {
+            return emptyArray()
+        }
+
+        val fixes = mutableListOf<LocalQuickFix>()
+
+        // Add "Import and prefix" quick fixes - show all symbols, public first
+        symbols.forEach { symbol ->
+            fixes.add(
+                RhaiImportAndPrefixQuickFix(
+                    name,
+                    symbol.file,
+                    symbol.moduleName,
+                    symbol.kind == RhaiProjectSymbolsProvider.SymbolKind.FUNCTION
+                )
+            )
+        }
+
+        return fixes.toTypedArray()
     }
 
     companion object {

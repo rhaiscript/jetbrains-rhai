@@ -11,6 +11,7 @@ import com.intellij.util.ProcessingContext
 import org.rhai.*
 import org.rhai.lang.RhaiFile
 import org.rhai.registry.RhaiRegistryProvider
+import org.rhai.util.RhaiImportUtils
 
 class RhaiCompletionContributor : CompletionContributor() {
 
@@ -39,26 +40,62 @@ class RhaiCompletionContributor : CompletionContributor() {
             val position = parameters.position
             val file = parameters.originalFile as? RhaiFile ?: return
 
-            // Add keywords
-            addKeywords(result)
+            // Check if we're in a member access context (after dot or ::)
+            val isAfterDot = isAfterDot(position)
+            val isAfterDoubleColon = isAfterDoubleColon(position)
 
-            // Add builtin functions
-            addBuiltinFunctions(result)
+            // Don't add keywords, snippets, or cross-file symbols after dot or ::
+            if (!isAfterDot && !isAfterDoubleColon) {
+                // Add keywords
+                addKeywords(result)
+
+                // Add snippets/templates
+                addSnippets(result)
+
+                // Add symbols from other files (with import hint)
+                addCrossFileSymbols(parameters, file, result)
+            }
+
+            // Add builtin functions (these can be called as methods too)
+            if (!isAfterDot) {
+                addBuiltinFunctions(result)
+            }
 
             // Add custom registered functions/variables from Rust
-            addCustomRegistryItems(parameters, result)
+            if (!isAfterDot) {
+                addCustomRegistryItems(parameters, result)
+            }
 
             // Add user-defined functions
-            addUserFunctions(file, result)
+            if (!isAfterDot) {
+                addUserFunctions(file, result)
+            }
 
-            // Add variables in scope
-            addVariablesInScope(position, file, result)
+            // Add variables in scope (not after dot or ::)
+            if (!isAfterDot && !isAfterDoubleColon) {
+                addVariablesInScope(position, file, result)
+            }
 
-            // Add constants
-            addConstants(file, result)
+            // Add constants (not after dot)
+            if (!isAfterDot && !isAfterDoubleColon) {
+                addConstants(file, result)
+            }
+        }
 
-            // Add snippets/templates
-            addSnippets(result)
+        private fun isAfterDot(position: PsiElement): Boolean {
+            var sibling = position.prevSibling
+            while (sibling != null && sibling.node.elementType == com.intellij.psi.TokenType.WHITE_SPACE) {
+                sibling = sibling.prevSibling
+            }
+            return sibling?.node?.elementType == RhaiTypes.DOT
+        }
+
+        private fun isAfterDoubleColon(position: PsiElement): Boolean {
+            var sibling = position.prevSibling
+            while (sibling != null && sibling.node.elementType == com.intellij.psi.TokenType.WHITE_SPACE) {
+                sibling = sibling.prevSibling
+            }
+            return sibling?.node?.elementType == RhaiTypes.DOUBLE_COLON
         }
 
         private fun addKeywords(result: CompletionResultSet) {
@@ -247,6 +284,91 @@ class RhaiCompletionContributor : CompletionContributor() {
             }
         }
 
+        private fun addCrossFileSymbols(parameters: CompletionParameters, currentFile: RhaiFile, result: CompletionResultSet) {
+            val virtualFile = currentFile.virtualFile ?: return
+            val project = parameters.position.project
+
+            // Get all Rhai files in project
+            val rhaiFiles = com.intellij.psi.search.FileTypeIndex.getFiles(
+                org.rhai.lang.RhaiFileType.INSTANCE,
+                com.intellij.psi.search.GlobalSearchScope.projectScope(project)
+            )
+
+            val psiManager = com.intellij.psi.PsiManager.getInstance(project)
+
+            for (file in rhaiFiles) {
+                if (file == virtualFile) continue
+
+                val psiFile = psiManager.findFile(file) as? RhaiFile ?: continue
+                val moduleName = file.nameWithoutExtension
+
+                // Add all functions from other files (pub first, then private)
+                PsiTreeUtil.findChildrenOfType(psiFile, RhaiFunctionDefinition::class.java)
+                    .forEach { func ->
+                        val name = func.identifier.text
+                        val params = func.parameters?.parameterList?.joinToString(", ") { it.pattern.text } ?: ""
+                        val isPublic = func.text.trimStart().startsWith("pub ")
+                        val visibility = if (isPublic) "" else " (private)"
+
+                        result.addElement(
+                            LookupElementBuilder.create("$moduleName::$name")
+                                .withLookupString(name)  // Also match by just the function name
+                                .withPresentableText(name)
+                                .withTypeText("from $moduleName$visibility")
+                                .withTailText("($params)", true)
+                                .withIcon(AllIcons.Nodes.Function)
+                                .withInsertHandler(CrossFileSymbolInsertHandler(file, moduleName, name, true))
+                        )
+                    }
+
+                // Add all constants from other files
+                PsiTreeUtil.findChildrenOfType(psiFile, RhaiConstDeclaration::class.java)
+                    .forEach { constDecl ->
+                        constDecl.node.findChildByType(RhaiTypes.IDENTIFIER)?.let { idNode ->
+                            val name = idNode.text
+                            val isPublic = constDecl.text.trimStart().startsWith("pub ")
+                            val visibility = if (isPublic) "" else " (private)"
+
+                            result.addElement(
+                                LookupElementBuilder.create("$moduleName::$name")
+                                    .withLookupString(name)
+                                    .withPresentableText(name)
+                                    .withTypeText("const from $moduleName$visibility")
+                                    .withIcon(AllIcons.Nodes.Constant)
+                                    .withInsertHandler(CrossFileSymbolInsertHandler(file, moduleName, name, false))
+                            )
+                        }
+                    }
+
+                // Add top-level let declarations (global variables) from other files
+                PsiTreeUtil.findChildrenOfType(psiFile, RhaiLetDeclaration::class.java)
+                    .filter { isTopLevelDeclaration(it, psiFile) }
+                    .forEach { letDecl ->
+                        val name = letDecl.pattern.text
+
+                        result.addElement(
+                            LookupElementBuilder.create("$moduleName::$name")
+                                .withLookupString(name)
+                                .withPresentableText(name)
+                                .withTypeText("var from $moduleName")
+                                .withIcon(AllIcons.Nodes.Variable)
+                                .withInsertHandler(CrossFileSymbolInsertHandler(file, moduleName, name, false))
+                        )
+                    }
+            }
+        }
+
+        private fun isTopLevelDeclaration(letDecl: RhaiLetDeclaration, file: RhaiFile): Boolean {
+            var parent = letDecl.parent
+            while (parent != null && parent !is RhaiFile) {
+                if (parent is RhaiFunctionDefinition || parent is RhaiClosureExpr) {
+                    return false  // Inside a function/closure
+                }
+                parent = parent.parent
+            }
+            return true
+        }
+
         private fun inferType(expression: RhaiExpression?): String {
             if (expression == null) return "Dynamic"
 
@@ -309,27 +431,79 @@ class RhaiCompletionContributor : CompletionContributor() {
         override fun handleInsert(context: InsertionContext, item: LookupElement) {
             val editor = context.editor
             val document = editor.document
+            val tailOffset = context.tailOffset
+
+            // Check if there's already a space after the insertion point
+            val hasSpaceAfter = tailOffset < document.textLength &&
+                    document.charsSequence[tailOffset] == ' '
 
             when (keyword) {
-                "if", "while", "for", "switch" -> {
-                    document.insertString(context.tailOffset, " ")
-                    editor.caretModel.moveToOffset(context.tailOffset + 1)
+                // Control flow keywords - need space before condition/expression
+                "if", "while", "for", "switch", "in" -> {
+                    if (!hasSpaceAfter) {
+                        document.insertString(tailOffset, " ")
+                    }
+                    editor.caretModel.moveToOffset(tailOffset + 1)
                 }
+                // Function definition - insert template
                 "fn" -> {
-                    document.insertString(context.tailOffset, " () {\n    \n}")
-                    editor.caretModel.moveToOffset(context.tailOffset + 2)
+                    document.insertString(tailOffset, " () {\n    \n}")
+                    editor.caretModel.moveToOffset(tailOffset + 2)
                 }
+                // Declarations - need space before name
                 "let", "const" -> {
-                    document.insertString(context.tailOffset, " ")
-                    editor.caretModel.moveToOffset(context.tailOffset + 1)
+                    if (!hasSpaceAfter) {
+                        document.insertString(tailOffset, " ")
+                    }
+                    editor.caretModel.moveToOffset(tailOffset + 1)
                 }
+                // Return/throw - need space before value
                 "return", "throw" -> {
-                    document.insertString(context.tailOffset, " ")
-                    editor.caretModel.moveToOffset(context.tailOffset + 1)
+                    if (!hasSpaceAfter) {
+                        document.insertString(tailOffset, " ")
+                    }
+                    editor.caretModel.moveToOffset(tailOffset + 1)
                 }
+                // Import - insert quotes for module path
                 "import" -> {
-                    document.insertString(context.tailOffset, " \"\"")
-                    editor.caretModel.moveToOffset(context.tailOffset + 2)
+                    document.insertString(tailOffset, " \"\"")
+                    editor.caretModel.moveToOffset(tailOffset + 2)
+                }
+                // Visibility modifiers - need space before fn/let/const
+                "pub", "private" -> {
+                    if (!hasSpaceAfter) {
+                        document.insertString(tailOffset, " ")
+                    }
+                    editor.caretModel.moveToOffset(tailOffset + 1)
+                }
+                // Module/export - need space before name
+                "module", "export" -> {
+                    if (!hasSpaceAfter) {
+                        document.insertString(tailOffset, " ")
+                    }
+                    editor.caretModel.moveToOffset(tailOffset + 1)
+                }
+                // Else - can be followed by space (else if) or brace (else {)
+                "else" -> {
+                    if (!hasSpaceAfter) {
+                        document.insertString(tailOffset, " ")
+                    }
+                    editor.caretModel.moveToOffset(tailOffset + 1)
+                }
+                // Try block - insert template
+                "try" -> {
+                    document.insertString(tailOffset, " {\n    \n}")
+                    editor.caretModel.moveToOffset(tailOffset + 6)
+                }
+                // Catch - need space before exception variable
+                "catch" -> {
+                    document.insertString(tailOffset, " (err) {\n    \n}")
+                    editor.caretModel.moveToOffset(tailOffset + 2)
+                }
+                // Loop - insert template
+                "loop" -> {
+                    document.insertString(tailOffset, " {\n    \n}")
+                    editor.caretModel.moveToOffset(tailOffset + 6)
                 }
             }
         }
@@ -346,6 +520,86 @@ class RhaiCompletionContributor : CompletionContributor() {
             } else {
                 document.insertString(context.tailOffset, "()")
                 editor.caretModel.moveToOffset(context.tailOffset + 2)
+            }
+        }
+    }
+
+    /**
+     * Insert handler for cross-file symbols.
+     * Adds the import statement if not already present and inserts the qualified reference.
+     */
+    private class CrossFileSymbolInsertHandler(
+        private val sourceFile: com.intellij.openapi.vfs.VirtualFile,
+        private val moduleName: String,
+        private val symbolName: String,
+        private val isFunction: Boolean
+    ) : InsertHandler<LookupElement> {
+        override fun handleInsert(context: InsertionContext, item: LookupElement) {
+            val editor = context.editor
+            val document = editor.document
+            val project = context.project
+            val psiFile = context.file as? RhaiFile ?: return
+            val currentFile = psiFile.virtualFile ?: return
+
+            // Save positions BEFORE any modifications
+            // At this point, completion has already inserted "moduleName::symbolName"
+            val completionStart = context.startOffset
+            val completionEnd = context.tailOffset
+
+            // Calculate relative import path
+            val importPath = RhaiProjectSymbolsProvider.getRelativeImportPath(currentFile, sourceFile)
+
+            // Check if import already exists using document text (more reliable than PSI)
+            val fileText = document.text
+            val existingAlias = RhaiImportUtils.findImportAliasInText(fileText, importPath)
+
+            val actualModuleName: String
+            var adjustment = 0
+
+            if (existingAlias != null) {
+                // Use existing alias - no import needed
+                actualModuleName = existingAlias
+            } else {
+                // Add new import at the appropriate location
+                // Use PSI for finding insert position (it's more accurate for structure)
+                com.intellij.psi.PsiDocumentManager.getInstance(project).commitDocument(document)
+                val insertOffset = RhaiImportUtils.findImportInsertOffset(psiFile)
+                val importStatement = RhaiImportUtils.buildImportStatement(importPath, moduleName)
+
+                document.insertString(insertOffset, importStatement)
+
+                // If import was inserted BEFORE the completion, adjust offsets
+                if (insertOffset <= completionStart) {
+                    adjustment = importStatement.length
+                }
+
+                actualModuleName = moduleName
+            }
+
+            // The completion inserted "moduleName::symbolName"
+            // If actualModuleName differs from moduleName, we need to replace the prefix
+            if (actualModuleName != moduleName) {
+                val adjustedStart = completionStart + adjustment
+                val adjustedEnd = completionEnd + adjustment
+
+                val oldText = "$moduleName::$symbolName"
+                val newText = "$actualModuleName::$symbolName"
+
+                document.replaceString(adjustedStart, adjustedEnd, newText)
+
+                // Add () for functions
+                if (isFunction) {
+                    val funcTail = adjustedStart + newText.length
+                    document.insertString(funcTail, "()")
+                    editor.caretModel.moveToOffset(funcTail + 1)
+                }
+            } else {
+                // Module name is the same, just add () for functions
+                if (isFunction) {
+                    val funcTail = completionEnd + adjustment
+                    document.insertString(funcTail, "()")
+                    editor.caretModel.moveToOffset(funcTail + 1)
+                }
             }
         }
     }
