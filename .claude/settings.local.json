@@ -17,7 +17,11 @@
       "Bash(git stash:*)",
       "Bash(/usr/libexec/java_home:*)",
       "Bash(JAVA_HOME=/Users/glebmikhailov/Library/Java/JavaVirtualMachines/corretto-17.0.10/Contents/Home ./gradlew compileKotlin:*)",
-      "Bash(JAVA_HOME=/Users/glebmikhailov/Library/Java/JavaVirtualMachines/corretto-17.0.10/Contents/Home ./gradlew buildPlugin:*)"
+      "Bash(JAVA_HOME=/Users/glebmikhailov/Library/Java/JavaVirtualMachines/corretto-17.0.10/Contents/Home ./gradlew buildPlugin:*)",
+      "Bash(JAVA_HOME=/Users/glebmikhailov/Library/Java/JavaVirtualMachines/corretto-17.0.10/Contents/Home ./gradlew compileTestKotlin:*)",
+      "Bash(JAVA_HOME=/Users/glebmikhailov/Library/Java/JavaVirtualMachines/corretto-17.0.10/Contents/Home ./gradlew test:*)",
+      "Bash(JAVA_HOME=/Users/glebmikhailov/Library/Java/JavaVirtualMachines/corretto-17.0.10/Contents/Home ./gradlew clean test:*)",
+      "Bash(JAVA_HOME=/Users/glebmikhailov/Library/Java/JavaVirtualMachines/corretto-17.0.10/Contents/Home ./gradlew:*)"
     ]
   }
 }

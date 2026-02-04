@@ -1,5 +1,6 @@
 # Rhai Language Support for JetBrains IDEs
 
+[![Build Status](https://github.com/your-username/rhai-highlight-plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/rhai-highlight-plugin/actions)
 [![JetBrains Plugin](https://img.shields.io/badge/JetBrains-Plugin-orange)](https://plugins.jetbrains.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -10,41 +11,87 @@ Full-featured language support for the [Rhai](https://rhai.rs/) scripting langua
 ### Syntax Highlighting
 - Full syntax highlighting for Rhai scripts
 - Customizable colors via **Settings > Editor > Color Scheme > Rhai**
+- Semantic highlighting for functions, variables, parameters, and more
 - Support for all Rhai constructs: functions, variables, strings, numbers, operators, etc.
 
 ### Code Intelligence
-- **Code completion** for keywords, built-in functions, and user-defined symbols
+- **Code completion** for:
+  - Keywords with smart insertion (automatic spaces after modifiers)
+  - 40+ built-in functions with documentation
+  - Array methods (push, pop, map, filter, reduce, etc.)
+  - String methods (trim, split, to_upper, etc.)
+  - User-defined functions and variables
+  - Cross-file symbols with automatic import generation
+  - Registered functions from Rust (via registry system)
 - **Go to definition** (Ctrl+Click or Ctrl+B)
 - **Find usages** (Alt+F7)
 - **Parameter info** for function calls
-- **Documentation on hover**
+- **Documentation on hover** for built-in and user-defined symbols
+
+### Refactoring
+- **Rename refactoring** (Shift+F6) for:
+  - Variables and constants
+  - Functions
+  - Function parameters
+  - Closure parameters
+  - For loop variables
+- Smart scope detection (local vs global)
+- Automatic update of all usages
 
 ### Code Navigation
 - **Structure view** with filtering (Alt+7)
+  - Functions (public/private/test indicators)
+  - Constants
+  - Variables
+  - Modules
 - **Breadcrumb navigation**
 - **Go to Symbol** (Ctrl+Alt+Shift+N)
+- **Line markers** for function definitions and usages
 
 ### Code Editing
-- **Code folding** for functions, blocks, and comments
+- **Code folding** for functions, blocks, comments, and imports
 - **Brace matching** and auto-closing
 - **Smart Enter** completion
 - **Comment/uncomment** (Ctrl+/)
-- **Surround with** templates (Ctrl+Alt+T)
+- **Surround with** templates (Ctrl+Alt+T):
+  - if, if-else, while, for, loop
+  - try-catch, block
+  - Parentheses
 - **Live templates** for common patterns
+
+### Code Formatting
+- **Reformat code** (Ctrl+Alt+L)
+- Configurable spacing rules for:
+  - Assignment, logical, equality, relational operators
+  - Additive and multiplicative operators
+  - Range and arrow operators
+  - Commas, colons, semicolons
+  - Braces, parentheses, brackets
+  - Closure pipes
+- Automatic indentation for blocks
+- Alignment of multiline parameters and arguments
 
 ### Code Quality
 - **Inspections:**
   - Unused variable detection
   - Unresolved reference detection
   - Duplicate function definition detection
-- **Quick fixes** for common issues
+- **Quick fixes (Alt+Enter):**
+  - **Create function** - creates a new function stub for unresolved function calls
+  - **Create variable** - creates a variable declaration for unresolved references
+  - **Auto-import symbols** from other files
+  - **Import and prefix** with module name (e.g., `module::symbol`)
+  - **Rename to `_name`** - marks unused variable as intentionally unused
+  - **Remove unused declaration** - deletes unused variable
+  - **Delete duplicate function** - removes duplicate function definition
+  - **Rename duplicate function** - renames to `funcName_2`
 - **Spell checking** in comments and strings
 
 ### Run Configuration
 - **Run Rhai scripts** directly from the IDE
 - **Right-click to run** any `.rhai` file
 - **Run gutter icon** for quick execution
-- Configurable interpreter path
+- Configurable interpreter path and arguments
 
 ### Rust Integration
 - **Auto-detect Rhai registrations** from Rust source files
@@ -61,7 +108,7 @@ Full-featured language support for the [Rhai](https://rhai.rs/) scripting langua
 4. Restart the IDE
 
 ### Manual Installation
-1. Download the plugin `.zip` from [Releases](https://github.com/example/rhai-intellij-plugin/releases)
+1. Download the plugin `.zip` from [Releases](https://github.com/your-username/rhai-highlight-plugin/releases)
 2. Open **Settings/Preferences > Plugins**
 3. Click the gear icon and select **Install Plugin from Disk...**
 4. Select the downloaded `.zip` file
@@ -156,13 +203,25 @@ Type the following abbreviations and press Tab to expand:
 | Abbreviation | Expands to |
 |-------------|-----------|
 | `fn` | Function definition |
+| `pubfn` | Public function definition |
 | `let` | Variable declaration |
+| `const` | Constant declaration |
+| `pubconst` | Public constant declaration |
 | `if` | If statement |
 | `ife` | If-else statement |
 | `for` | For loop |
+| `fori` | For loop with index (0..n) |
+| `forr` | For loop with range |
 | `while` | While loop |
 | `loop` | Infinite loop |
-| `match` | Switch statement |
+| `match` | Switch expression |
+| `trye` | Try-catch block |
+| `closure` | Closure expression |
+| `mape` | Map expression |
+| `filtere` | Filter expression |
+| `reducee` | Reduce expression |
+| `guard` | Guard clause (if-return pattern) |
+| `doc` | Documentation comment |
 
 ## File Templates
 
@@ -175,22 +234,42 @@ Create new Rhai files with predefined templates:
 Configure Rhai code style settings:
 **Settings > Editor > Code Style > Rhai**
 
-Options include:
-- Indentation (tabs vs spaces)
-- Continuation indent
-- Keep line breaks
+### Spacing Options
+- Spaces around operators (assignment, logical, equality, relational, etc.)
+- Spaces around range and arrow operators
+- Spaces after/before commas, colons, semicolons
+- Spaces within parentheses, brackets, braces
+- Spaces within closure pipes
+
+### Brace & Wrapping Options
+- Space before function/if/loop/switch left brace
+- Align multiline parameters and arguments
+- Align multiline array elements and object fields
+- Keep trailing commas
+
+### Indentation Options
+- Indent size (default: 4)
+- Tab size (default: 4)
+- Continuation indent size (default: 4)
+- Use tabs or spaces
+
+### Blank Lines
+- Blank lines after imports
+- Blank lines around functions
+- Blank lines around modules
 
 ## Requirements
 
 - IntelliJ IDEA 2023.1+ (or compatible JetBrains IDE)
+- Java 17+
 - For running scripts: Rhai interpreter (`cargo install rhai-repl`)
 
 ## Building from Source
 
 ```bash
 # Clone the repository
-git clone https://github.com/example/rhai-intellij-plugin.git
-cd rhai-intellij-plugin
+git clone https://github.com/your-username/rhai-highlight-plugin.git
+cd rhai-highlight-plugin
 
 # Build the plugin
 ./gradlew buildPlugin
@@ -209,6 +288,36 @@ cd rhai-intellij-plugin
 
 # Run linter
 ./gradlew detekt
+
+# Verify plugin compatibility
+./gradlew verifyPlugin
+```
+
+### Project Structure
+
+```
+src/
+├── main/
+│   ├── grammars/           # BNF grammar and JFlex lexer
+│   ├── kotlin/org/rhai/
+│   │   ├── features/       # Completion, folding, structure view, etc.
+│   │   ├── highlighting/   # Syntax highlighter
+│   │   ├── inspections/    # Code inspections and quick fixes
+│   │   ├── intentions/     # Intention actions
+│   │   ├── lang/           # Language and file type definitions
+│   │   ├── navigation/     # Go to declaration
+│   │   ├── parser/         # Parser definition
+│   │   ├── refactoring/    # Rename refactoring
+│   │   ├── registry/       # Rust integration registry
+│   │   ├── run/            # Run configuration
+│   │   ├── settings/       # Settings pages
+│   │   └── util/           # Utility classes
+│   └── resources/
+│       ├── META-INF/       # Plugin descriptor
+│       ├── icons/          # Plugin icons
+│       └── liveTemplates/  # Live template definitions
+└── test/
+    └── kotlin/org/rhai/    # Unit tests
 ```
 
 ## Contributing
@@ -217,8 +326,9 @@ Contributions are welcome! Please:
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Run `./gradlew detekt` to check code style
-5. Submit a pull request
+4. Run `./gradlew test` to ensure tests pass
+5. Run `./gradlew detekt` to check code style
+6. Submit a pull request
 
 ## License
 

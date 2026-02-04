@@ -135,8 +135,14 @@ jobs:
         run: |
           sed -i "s/version = \".*\"/version = \"${{ steps.version.outputs.VERSION }}\"/" build.gradle.kts
 
+      - name: Generate Lexer and Parser
+        run: ./gradlew generateLexer generateParser
+
       - name: Build plugin
         run: ./gradlew buildPlugin
+
+      - name: Run Tests
+        run: ./gradlew test
 
       - name: Verify plugin
         run: ./gradlew verifyPlugin
@@ -182,14 +188,26 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
+      - name: Generate Lexer and Parser
+        run: ./gradlew generateLexer generateParser
+
       - name: Build
         run: ./gradlew buildPlugin
+
+      - name: Run Tests
+        run: ./gradlew test
 
       - name: Run Detekt
         run: ./gradlew detekt
 
       - name: Verify Plugin
         run: ./gradlew verifyPlugin
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-zip
+          path: build/distributions/*.zip
 ```
 
 ---
@@ -232,8 +250,14 @@ gh release create v1.0.0 --title "v1.0.0" --notes "Release notes here"
 ## Полезные команды
 
 ```bash
+# Генерация лексера и парсера
+./gradlew generateLexer generateParser
+
 # Сборка плагина
 ./gradlew buildPlugin
+
+# Запуск тестов
+./gradlew test
 
 # Проверка плагина
 ./gradlew verifyPlugin

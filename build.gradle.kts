@@ -77,8 +77,8 @@ tasks {
     }
 
     patchPluginXml {
-        sinceBuild.set("231")
-        untilBuild.set("243.*")
+        sinceBuild.set("233")
+        untilBuild.set("251.*")
     }
 
     signPlugin {
@@ -132,5 +132,23 @@ sourceSets {
         java.srcDirs("src/main/gen")
         kotlin.srcDirs("src/main/kotlin")
         resources.srcDirs("src/main/resources")
+    }
+    test {
+        kotlin.srcDirs("src/test/kotlin")
+        resources.srcDirs("src/test/resources")
+    }
+}
+
+dependencies {
+    testImplementation("junit:junit:4.13.2")
+}
+
+tasks {
+    test {
+        useJUnit()
+        testLogging {
+            events("passed", "skipped", "failed")
+            showStandardStreams = true
+        }
     }
 }

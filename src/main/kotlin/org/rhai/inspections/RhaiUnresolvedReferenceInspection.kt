@@ -5,6 +5,7 @@ import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
+import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.TokenType
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
@@ -79,24 +80,33 @@ class RhaiUnresolvedReferenceInspection : RhaiInspectionBase() {
             // Check if function is defined
             if (!isFunctionDefined(file, name) && !BUILTIN_FUNCTIONS.contains(name)) {
                 // Check if function exists in other files for import suggestion
-                val quickFixes = createImportQuickFixes(element, name, isFunction = true)
+                val quickFixes = createImportQuickFixes(element, name, isFunction = true).toMutableList()
+
+                // Add "Create function" quick fix
+                val argCount = countFunctionArguments(element)
+                quickFixes.add(CreateFunctionQuickFix(name, argCount))
+
                 holder.registerProblem(
                     element,
                     "Unresolved function '$name'",
                     ProblemHighlightType.LIKE_UNKNOWN_SYMBOL,
-                    *quickFixes
+                    *quickFixes.toTypedArray()
                 )
             }
         } else {
             // Check if variable is defined
             if (!isVariableDefined(file, name, element.textOffset)) {
                 // Check if variable/constant exists in other files for import suggestion
-                val quickFixes = createImportQuickFixes(element, name, isFunction = false)
+                val quickFixes = createImportQuickFixes(element, name, isFunction = false).toMutableList()
+
+                // Add "Create variable" quick fix
+                quickFixes.add(CreateVariableQuickFix(name))
+
                 holder.registerProblem(
                     element,
                     "Unresolved reference '$name'",
                     ProblemHighlightType.LIKE_UNKNOWN_SYMBOL,
-                    *quickFixes
+                    *quickFixes.toTypedArray()
                 )
             }
         }
@@ -184,6 +194,60 @@ class RhaiUnresolvedReferenceInspection : RhaiInspectionBase() {
         }
 
         return false
+    }
+
+    private fun countFunctionArguments(element: PsiElement): Int {
+        // Try to find the argument list after the function name
+        var sibling = element.nextSibling
+        while (sibling != null && sibling.elementType == TokenType.WHITE_SPACE) {
+            sibling = sibling.nextSibling
+        }
+
+        // Check for direct LPAREN followed by arguments
+        if (sibling?.elementType == RhaiTypes.LPAREN) {
+            return countArgsInParens(sibling)
+        }
+
+        // Check for postfix_op with argument list
+        if (sibling is RhaiPostfixOp) {
+            val argList = PsiTreeUtil.findChildOfType(sibling, RhaiArgumentList::class.java)
+            return argList?.children?.count { it !is com.intellij.psi.PsiWhiteSpace && it.text != "," } ?: 0
+        }
+
+        // Check parent primary_expr's sibling
+        val parent = element.parent
+        if (parent?.elementType == RhaiTypes.PRIMARY_EXPR) {
+            var parentSibling = parent.nextSibling
+            while (parentSibling != null && parentSibling.node.elementType == TokenType.WHITE_SPACE) {
+                parentSibling = parentSibling.nextSibling
+            }
+            if (parentSibling is RhaiPostfixOp) {
+                val argList = PsiTreeUtil.findChildOfType(parentSibling, RhaiArgumentList::class.java)
+                return argList?.children?.count { it !is PsiWhiteSpace && it.text != "," && it.text != "(" && it.text != ")" } ?: 0
+            }
+        }
+
+        return 0
+    }
+
+    private fun countArgsInParens(lparen: PsiElement): Int {
+        var count = 0
+        var depth = 1
+        var sibling = lparen.nextSibling
+        var hasContent = false
+
+        while (sibling != null && depth > 0) {
+            when (sibling.elementType) {
+                RhaiTypes.LPAREN -> depth++
+                RhaiTypes.RPAREN -> depth--
+                RhaiTypes.COMMA -> if (depth == 1) count++
+                TokenType.WHITE_SPACE -> { /* skip */ }
+                else -> if (depth == 1) hasContent = true
+            }
+            sibling = sibling.nextSibling
+        }
+
+        return if (hasContent) count + 1 else 0
     }
 
     private fun isFunctionCall(element: PsiElement): Boolean {

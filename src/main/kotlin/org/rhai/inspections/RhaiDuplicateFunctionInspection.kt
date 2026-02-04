@@ -39,10 +39,13 @@ class RhaiDuplicateFunctionInspection : RhaiInspectionBase() {
                         // Report all duplicates except the first one
                         for (i in 1 until funcs.size) {
                             val func = funcs[i]
+                            val funcName = func.identifier.text
                             holder.registerProblem(
                                 func.identifier,
-                                "Function '${func.identifier.text}' is already defined",
-                                ProblemHighlightType.GENERIC_ERROR
+                                "Function '$funcName' is already defined",
+                                ProblemHighlightType.GENERIC_ERROR,
+                                DeleteDuplicateFunctionQuickFix(),
+                                RenameDuplicateFunctionQuickFix(funcName)
                             )
                         }
                     }

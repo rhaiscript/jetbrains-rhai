@@ -29,6 +29,9 @@ jobs:
       - name: Build
         run: ./gradlew buildPlugin
 
+      - name: Run Tests
+        run: ./gradlew test
+
       - name: Run Detekt
         run: ./gradlew detekt
 
