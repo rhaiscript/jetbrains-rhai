@@ -14,7 +14,7 @@ import org.rhai.RhaiTypes
 
 class RhaiSyntaxHighlighter : SyntaxHighlighterBase() {
 
-    override fun getHighlightingLexer(): Lexer = RhaiFlexAdapter.INSTANCE
+    override fun getHighlightingLexer(): Lexer = RhaiFlexAdapter.createLexer()
 
     override fun getTokenHighlights(tokenType: IElementType?): Array<TextAttributesKey> {
         return when (tokenType) {

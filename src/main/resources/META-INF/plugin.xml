@@ -152,13 +152,13 @@
 
         <!-- Settings & Services -->
         <projectService serviceImplementation="org.rhai.settings.RhaiSettings"/>
-        <projectService serviceImplementation="org.rhai.settings.RhaiCustomRegistrySettings"/>
 
         <!-- Project Settings Configurable -->
         <projectConfigurable parentId="language"
-                             instance="org.rhai.settings.RhaiCustomRegistryConfigurable"
+                             provider="org.rhai.settings.RhaiCustomRegistryConfigurableProvider"
                              id="org.rhai.settings.RhaiCustomRegistryConfigurable"
-                             displayName="Rhai Custom Registry"/>
+                             displayName="Rhai Custom Registry"
+                             nonDefaultProject="true"/>
 
         <!-- File Templates -->
         <fileTemplateGroup implementation="org.rhai.file.RhaiTemplatesProvider"/>
@@ -169,6 +169,9 @@
         <runConfigurationProducer implementation="org.rhai.run.RhaiRunConfigurationProducer"/>
         <runLineMarkerContributor language="Rhai"
                                   implementationClass="org.rhai.run.RhaiRunLineMarkerProvider"/>
+
+        <!-- Auto Registry Startup -->
+        <postStartupActivity implementation="org.rhai.registry.RhaiAutoRegistryStartupActivity"/>
 
     </extensions>
 
@@ -182,5 +185,13 @@
                     icon="/icons/icon.svg">
             </action>
         </group>
+
+        <!-- Add to Rhai Registry action (for Rust files) -->
+        <action id="Rhai.AddToRegistry"
+                class="org.rhai.actions.AddToRhaiRegistryAction"
+                text="Add to Rhai Registry"
+                description="Parse and add this Rhai registration to the plugin registry">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </action>
     </actions>
 </idea-plugin>

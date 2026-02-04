@@ -10,7 +10,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.ProcessingContext
 import org.rhai.*
 import org.rhai.lang.RhaiFile
-import org.rhai.settings.RhaiCustomRegistrySettings
+import org.rhai.registry.RhaiRegistryProvider
 
 class RhaiCompletionContributor : CompletionContributor() {
 
@@ -87,21 +87,27 @@ class RhaiCompletionContributor : CompletionContributor() {
 
         private fun addCustomRegistryItems(parameters: CompletionParameters, result: CompletionResultSet) {
             val project = parameters.position.project
-            val registry = RhaiCustomRegistrySettings.getInstance(project)
 
-            // Add custom functions
-            registry.getCustomFunctionList().forEach { name ->
+            // Add registered functions from all sources (global, project, auto)
+            RhaiRegistryProvider.getAllFunctions(project).forEach { name ->
+                val source = RhaiRegistryProvider.getFunctionSource(project, name)
+                val typeText = when (source) {
+                    org.rhai.registry.RegistrySource.GLOBAL -> "Global function"
+                    org.rhai.registry.RegistrySource.PROJECT -> "Project function"
+                    org.rhai.registry.RegistrySource.AUTO -> "Auto-detected function"
+                    org.rhai.registry.RegistrySource.UNKNOWN -> "Rust function"
+                }
                 result.addElement(
                     LookupElementBuilder.create(name)
-                        .withTypeText("Rust function")
+                        .withTypeText(typeText)
                         .withTailText("(...)", true)
                         .withIcon(AllIcons.Nodes.Method)
                         .withInsertHandler(FunctionInsertHandler(true))
                 )
             }
 
-            // Add custom variables
-            registry.getCustomVariableList().forEach { name ->
+            // Add registered variables from all sources
+            RhaiRegistryProvider.getAllVariables(project).forEach { name ->
                 result.addElement(
                     LookupElementBuilder.create(name)
                         .withTypeText("Rust variable")
@@ -109,12 +115,21 @@ class RhaiCompletionContributor : CompletionContributor() {
                 )
             }
 
-            // Add custom types
-            registry.getCustomTypeList().forEach { name ->
+            // Add registered types from all sources
+            RhaiRegistryProvider.getAllTypes(project).forEach { name ->
                 result.addElement(
                     LookupElementBuilder.create(name)
                         .withTypeText("Rust type")
                         .withIcon(AllIcons.Nodes.Class)
+                )
+            }
+
+            // Add registered properties (getters/setters)
+            RhaiRegistryProvider.getAllProperties(project).forEach { name ->
+                result.addElement(
+                    LookupElementBuilder.create(name)
+                        .withTypeText("Property")
+                        .withIcon(AllIcons.Nodes.Property)
                 )
             }
         }

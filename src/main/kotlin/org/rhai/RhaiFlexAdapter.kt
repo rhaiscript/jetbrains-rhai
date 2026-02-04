@@ -5,6 +5,11 @@ import com.intellij.lexer.FlexAdapter
 class RhaiFlexAdapter : FlexAdapter(RhaiLexer(null)) {
     companion object {
         @JvmStatic
-        val INSTANCE = RhaiFlexAdapter()
+        fun createLexer() = RhaiFlexAdapter()
+
+        // For backwards compatibility, but should not be used for parsing
+        @JvmStatic
+        val INSTANCE: RhaiFlexAdapter
+            get() = RhaiFlexAdapter()
     }
 }

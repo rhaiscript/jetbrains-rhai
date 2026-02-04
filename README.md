@@ -46,6 +46,12 @@ Full-featured language support for the [Rhai](https://rhai.rs/) scripting langua
 - **Run gutter icon** for quick execution
 - Configurable interpreter path
 
+### Rust Integration
+- **Auto-detect Rhai registrations** from Rust source files
+- Support for `register_fn`, `register_type`, `register_get/set`, and module functions
+- Separate **global** and **project-specific** registries
+- **Right-click action** to manually add registrations from Rust code
+
 ## Installation
 
 ### From JetBrains Marketplace
@@ -87,6 +93,61 @@ To customize the run configuration:
    - **Interpreter**: Path to `rhai-repl` or custom interpreter
    - **Arguments**: Script arguments
    - **Working directory**: Execution directory
+
+## Rust Integration (Auto-Registry)
+
+The plugin automatically detects Rhai function registrations in Rust source files and provides code completion and reference resolution for them.
+
+### Supported Patterns
+
+The plugin parses Rust files for these registration patterns:
+
+```rust
+// Function registrations
+engine.register_fn("my_function", my_rust_fn);
+engine.register_fn(CONST_NAME, my_rust_fn);  // Constant-based names
+
+// Type registrations
+engine.register_type::<MyType>();
+engine.register_type_with_name::<MyType>("CustomName");
+
+// Property getters/setters
+engine.register_get("prop", getter_fn);
+engine.register_set("prop", setter_fn);
+engine.register_get_set("prop", getter_fn, setter_fn);
+
+// Module registrations
+module.set_fn("function_name", func);
+module.set_var("variable_name", value);
+```
+
+### Registry Settings
+
+Configure the registry at **Settings > Languages & Frameworks > Rhai Custom Registry**:
+
+#### Project Registry Tab
+- Add project-specific functions, variables, and types manually
+- These are only available in the current project
+
+#### Global Registry Tab
+- Add functions, variables, and types available in ALL projects
+- Useful for common Rhai engine extensions you use everywhere
+
+#### Auto Registry Tab
+- Enable/disable automatic Rust file scanning
+- **Destination setting**: Choose where to save auto-detected registrations:
+  - **Project registry** - Only available in the current project (default)
+  - **Global registry** - Available across all projects
+- Configure include/exclude patterns for file scanning
+- View statistics of auto-detected registrations
+- Click "Rescan Now" to refresh the registry
+
+### Adding Registrations Manually
+
+1. Open a Rust file with Rhai registrations
+2. Right-click on a line with a registration (e.g., `engine.register_fn(...)`)
+3. Select **Add to Rhai Registry**
+4. Choose scope: **Global** (all projects) or **Project** (current project only)
 
 ## Live Templates
 
