@@ -7,7 +7,6 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.TokenType
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
-import com.intellij.refactoring.suggested.startOffset
 import org.rhai.*
 import org.rhai.lang.RhaiFile
 
@@ -213,7 +212,7 @@ class RhaiGotoDeclarationHandler : GotoDeclarationHandler {
     ) {
         PsiTreeUtil.findChildrenOfType(file, RhaiFunctionDefinition::class.java).forEach { funcDef ->
             val identifier = funcDef.identifier
-            if (identifier.text == name && identifier.startOffset != sourceElement.startOffset) {
+            if (identifier.text == name && identifier.textOffset != sourceElement.textOffset) {
                 targets.add(identifier)
             }
         }
@@ -225,7 +224,7 @@ class RhaiGotoDeclarationHandler : GotoDeclarationHandler {
         sourceElement: PsiElement,
         targets: MutableList<PsiElement>
     ) {
-        val sourceOffset = sourceElement.startOffset
+        val sourceOffset = sourceElement.textOffset
 
         // Find let declarations
         PsiTreeUtil.findChildrenOfType(file, RhaiLetDeclaration::class.java)
@@ -273,7 +272,7 @@ class RhaiGotoDeclarationHandler : GotoDeclarationHandler {
         val forStmt = PsiTreeUtil.getParentOfType(sourceElement, RhaiForStatement::class.java)
         forStmt?.let {
             val idNode = it.node.findChildByType(RhaiTypes.IDENTIFIER)
-            if (idNode?.text == name && idNode.startOffset != sourceElement.startOffset) {
+            if (idNode?.text == name && idNode.psi.textOffset != sourceElement.textOffset) {
                 targets.add(idNode.psi)
             }
         }
@@ -292,7 +291,7 @@ class RhaiGotoDeclarationHandler : GotoDeclarationHandler {
                 closure.closureParams?.closureParamList?.forEach { param ->
                     val pattern = param.pattern
                     val idNode = pattern.node.findChildByType(RhaiTypes.IDENTIFIER)
-                    if (idNode?.text == name && idNode.startOffset != sourceElement.startOffset) {
+                    if (idNode?.text == name && idNode.psi.textOffset != sourceElement.textOffset) {
                         targets.add(idNode.psi)
                     }
                 }
