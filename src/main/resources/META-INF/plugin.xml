@@ -27,7 +27,7 @@
         <p>Rhai is a simple, fast, safe scripting language for Rust.</p>
     ]]></description>
 
-    <vendor email="gleb.mikhailov.04@gmail.com" url="www.linkedin.com/in/gleb-mikhailov">Gleb Mikhailov</vendor>
+    <vendor email="gleb.mikhailov.04@gmail.com" url="https://github.com/GlebMikhailov/rhai-jetbrains-plugin">Gleb Mikhailov</vendor>
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.lang</depends>
@@ -55,6 +55,7 @@
         <lang.foldingBuilder language="Rhai" implementationClass="org.rhai.features.RhaiFoldingBuilder"/>
         <lang.formatter language="Rhai" implementationClass="org.rhai.features.RhaiFormatter"/>
         <quoteHandler fileType="Rhai File" className="org.rhai.features.RhaiQuoteHandler"/>
+        <typedHandler implementation="org.rhai.features.RhaiTypedHandler"/>
         <lang.smartEnterProcessor language="Rhai"
                                   implementationClass="org.rhai.features.RhaiSmartEnterProcessor"/>
 
@@ -158,6 +159,7 @@
 
         <!-- Settings & Services -->
         <projectService serviceImplementation="org.rhai.settings.RhaiSettings"/>
+        <projectService serviceImplementation="org.rhai.registry.RhaiRegistryCodeParser"/>
 
         <!-- Project Settings Configurable -->
         <projectConfigurable parentId="language"

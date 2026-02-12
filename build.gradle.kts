@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "org.rhai"
-version = "0.0.2"
+version = "1.0.0"
 
 repositories {
     mavenCentral()

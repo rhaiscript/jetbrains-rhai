@@ -5,8 +5,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.util.xmlb.XmlSerializerUtil
 
 /**
- * Persistent settings for custom Rhai functions and variables
- * registered from Rust code. These are project-specific.
+ * Persistent settings for project-specific Rhai registry.
+ * Stores Rhai code that defines functions, variables, and types for this project.
  */
 @State(
     name = "RhaiCustomRegistrySettings",
@@ -14,6 +14,16 @@ import com.intellij.util.xmlb.XmlSerializerUtil
 )
 @Service(Service.Level.PROJECT)
 class RhaiCustomRegistrySettings : PersistentStateComponent<RhaiCustomRegistrySettings> {
+
+    /**
+     * Rhai code defining project scope (functions, variables, constants)
+     */
+    var projectRhaiCode: String = ""
+
+    /**
+     * Whether to inherit global scope definitions in this project
+     */
+    var inheritGlobalScope: Boolean = true
 
     /**
      * Enable automatic parsing of Rust files for Rhai registrations
@@ -26,23 +36,7 @@ class RhaiCustomRegistrySettings : PersistentStateComponent<RhaiCustomRegistrySe
     var autoRegistryDestination: String = "project"
 
     /**
-     * Custom functions registered from Rust (project-specific, comma-separated)
-     */
-    var customFunctions: String = ""
-
-    /**
-     * Custom variables/constants registered from Rust (project-specific, comma-separated)
-     */
-    var customVariables: String = ""
-
-    /**
-     * Custom types registered from Rust (project-specific, comma-separated)
-     */
-    var customTypes: String = ""
-
-    /**
      * File patterns to include in auto-scan (glob patterns, newline-separated)
-     * Default: all .rs files
      */
     var autoScanPatterns: String = "**/*.rs"
 
@@ -51,14 +45,69 @@ class RhaiCustomRegistrySettings : PersistentStateComponent<RhaiCustomRegistrySe
      */
     var autoScanExcludePatterns: String = "**/target/**\n**/build/**"
 
+    // Legacy fields for migration
+    var customFunctions: String = ""
+    var customVariables: String = ""
+    var customTypes: String = ""
+    var migrated: Boolean = false
+
     override fun getState(): RhaiCustomRegistrySettings = this
 
     override fun loadState(state: RhaiCustomRegistrySettings) {
         XmlSerializerUtil.copyBean(state, this)
+
+        // Perform migration if needed
+        if (!migrated && hasLegacyData()) {
+            migrateFromLegacyFormat()
+            migrated = true
+        }
+    }
+
+    private fun hasLegacyData(): Boolean {
+        return customFunctions.isNotEmpty() || customVariables.isNotEmpty() || customTypes.isNotEmpty()
+    }
+
+    private fun migrateFromLegacyFormat() {
+        val builder = StringBuilder()
+        builder.appendLine("// === Migrated from legacy format ===")
+        builder.appendLine()
+
+        val functions = getCustomFunctionList()
+        if (functions.isNotEmpty()) {
+            builder.appendLine("// Functions:")
+            functions.forEach { name ->
+                builder.appendLine("fn $name() {}")
+            }
+            builder.appendLine()
+        }
+
+        val variables = getCustomVariableList()
+        if (variables.isNotEmpty()) {
+            builder.appendLine("// Variables:")
+            variables.forEach { name ->
+                builder.appendLine("let $name;")
+            }
+            builder.appendLine()
+        }
+
+        val types = getCustomTypeList()
+        if (types.isNotEmpty()) {
+            builder.appendLine("// Types:")
+            types.forEach { name ->
+                builder.appendLine("// type: $name")
+            }
+        }
+
+        projectRhaiCode = builder.toString().trim()
+
+        // Clear legacy fields after migration
+        customFunctions = ""
+        customVariables = ""
+        customTypes = ""
     }
 
     /**
-     * Get list of custom function names (project-specific)
+     * Legacy method - get list of custom function names
      */
     fun getCustomFunctionList(): Set<String> {
         return customFunctions
@@ -69,7 +118,7 @@ class RhaiCustomRegistrySettings : PersistentStateComponent<RhaiCustomRegistrySe
     }
 
     /**
-     * Get list of custom variable names (project-specific)
+     * Legacy method - get list of custom variable names
      */
     fun getCustomVariableList(): Set<String> {
         return customVariables
@@ -80,7 +129,7 @@ class RhaiCustomRegistrySettings : PersistentStateComponent<RhaiCustomRegistrySe
     }
 
     /**
-     * Get list of custom type names (project-specific)
+     * Legacy method - get list of custom type names
      */
     fun getCustomTypeList(): Set<String> {
         return customTypes
@@ -88,42 +137,6 @@ class RhaiCustomRegistrySettings : PersistentStateComponent<RhaiCustomRegistrySe
             .map { it.trim() }
             .filter { it.isNotEmpty() }
             .toSet()
-    }
-
-    /**
-     * Add a function to project-specific registry
-     */
-    fun addCustomFunction(name: String) {
-        val functions = getCustomFunctionList().toMutableSet()
-        functions.add(name)
-        customFunctions = functions.sorted().joinToString("\n")
-    }
-
-    /**
-     * Add a variable to project-specific registry
-     */
-    fun addCustomVariable(name: String) {
-        val variables = getCustomVariableList().toMutableSet()
-        variables.add(name)
-        customVariables = variables.sorted().joinToString("\n")
-    }
-
-    /**
-     * Add a type to project-specific registry
-     */
-    fun addCustomType(name: String) {
-        val types = getCustomTypeList().toMutableSet()
-        types.add(name)
-        customTypes = types.sorted().joinToString("\n")
-    }
-
-    /**
-     * Remove a function from project-specific registry
-     */
-    fun removeCustomFunction(name: String) {
-        val functions = getCustomFunctionList().toMutableSet()
-        functions.remove(name)
-        customFunctions = functions.sorted().joinToString("\n")
     }
 
     /**
@@ -144,6 +157,38 @@ class RhaiCustomRegistrySettings : PersistentStateComponent<RhaiCustomRegistrySe
             .split("\n")
             .map { it.trim() }
             .filter { it.isNotEmpty() }
+    }
+
+    /**
+     * Add a function declaration to project Rhai code
+     */
+    fun addCustomFunction(name: String) {
+        val declaration = "fn $name() {}"
+        appendToRhaiCode(declaration)
+    }
+
+    /**
+     * Add a variable declaration to project Rhai code
+     */
+    fun addCustomVariable(name: String) {
+        val declaration = "let $name;"
+        appendToRhaiCode(declaration)
+    }
+
+    /**
+     * Add a type declaration (as comment) to project Rhai code
+     */
+    fun addCustomType(name: String) {
+        val declaration = "// type: $name"
+        appendToRhaiCode(declaration)
+    }
+
+    private fun appendToRhaiCode(declaration: String) {
+        projectRhaiCode = if (projectRhaiCode.isBlank()) {
+            declaration
+        } else {
+            projectRhaiCode.trimEnd() + "\n" + declaration
+        }
     }
 
     companion object {

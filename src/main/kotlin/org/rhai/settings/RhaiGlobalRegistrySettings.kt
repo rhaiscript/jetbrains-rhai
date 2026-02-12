@@ -2,10 +2,11 @@ package org.rhai.settings
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.*
+import com.intellij.util.xmlb.XmlSerializerUtil
 
 /**
- * Global (application-level) settings for Rhai functions and variables.
- * These are available across all projects.
+ * Global (application-level) settings for Rhai registry.
+ * Stores Rhai code that defines functions, variables, and types available across all projects.
  */
 @State(
     name = "RhaiGlobalRegistrySettings",
@@ -15,28 +16,88 @@ import com.intellij.openapi.components.*
 class RhaiGlobalRegistrySettings : PersistentStateComponent<RhaiGlobalRegistrySettings> {
 
     /**
-     * Global functions available in all projects (comma or newline separated)
+     * Rhai code defining global scope (functions, variables, constants)
+     */
+    var globalRhaiCode: String = ""
+
+    /**
+     * Legacy: Global functions (comma or newline separated) - kept for migration
      */
     var globalFunctions: String = ""
 
     /**
-     * Global variables available in all projects (comma or newline separated)
+     * Legacy: Global variables (comma or newline separated) - kept for migration
      */
     var globalVariables: String = ""
 
     /**
-     * Global types available in all projects (comma or newline separated)
+     * Legacy: Global types (comma or newline separated) - kept for migration
      */
     var globalTypes: String = ""
+
+    /**
+     * Flag indicating if migration from legacy format has been done
+     */
+    var migrated: Boolean = false
 
     override fun getState(): RhaiGlobalRegistrySettings = this
 
     override fun loadState(state: RhaiGlobalRegistrySettings) {
-        globalFunctions = state.globalFunctions
-        globalVariables = state.globalVariables
-        globalTypes = state.globalTypes
+        XmlSerializerUtil.copyBean(state, this)
+
+        // Perform migration if needed
+        if (!migrated && hasLegacyData()) {
+            migrateFromLegacyFormat()
+            migrated = true
+        }
     }
 
+    private fun hasLegacyData(): Boolean {
+        return globalFunctions.isNotEmpty() || globalVariables.isNotEmpty() || globalTypes.isNotEmpty()
+    }
+
+    private fun migrateFromLegacyFormat() {
+        val builder = StringBuilder()
+        builder.appendLine("// === Migrated from legacy format ===")
+        builder.appendLine()
+
+        val functions = getGlobalFunctionList()
+        if (functions.isNotEmpty()) {
+            builder.appendLine("// Functions:")
+            functions.forEach { name ->
+                builder.appendLine("fn $name() {}")
+            }
+            builder.appendLine()
+        }
+
+        val variables = getGlobalVariableList()
+        if (variables.isNotEmpty()) {
+            builder.appendLine("// Variables:")
+            variables.forEach { name ->
+                builder.appendLine("let $name;")
+            }
+            builder.appendLine()
+        }
+
+        val types = getGlobalTypeList()
+        if (types.isNotEmpty()) {
+            builder.appendLine("// Types:")
+            types.forEach { name ->
+                builder.appendLine("// type: $name")
+            }
+        }
+
+        globalRhaiCode = builder.toString().trim()
+
+        // Clear legacy fields after migration
+        globalFunctions = ""
+        globalVariables = ""
+        globalTypes = ""
+    }
+
+    /**
+     * Legacy method - get list of function names from legacy field
+     */
     fun getGlobalFunctionList(): Set<String> {
         return globalFunctions
             .split(",", "\n")
@@ -45,6 +106,9 @@ class RhaiGlobalRegistrySettings : PersistentStateComponent<RhaiGlobalRegistrySe
             .toSet()
     }
 
+    /**
+     * Legacy method - get list of variable names from legacy field
+     */
     fun getGlobalVariableList(): Set<String> {
         return globalVariables
             .split(",", "\n")
@@ -53,6 +117,9 @@ class RhaiGlobalRegistrySettings : PersistentStateComponent<RhaiGlobalRegistrySe
             .toSet()
     }
 
+    /**
+     * Legacy method - get list of type names from legacy field
+     */
     fun getGlobalTypeList(): Set<String> {
         return globalTypes
             .split(",", "\n")
@@ -61,22 +128,36 @@ class RhaiGlobalRegistrySettings : PersistentStateComponent<RhaiGlobalRegistrySe
             .toSet()
     }
 
+    /**
+     * Add a function declaration to global Rhai code
+     */
     fun addGlobalFunction(name: String) {
-        val functions = getGlobalFunctionList().toMutableSet()
-        functions.add(name)
-        globalFunctions = functions.sorted().joinToString("\n")
+        val declaration = "fn $name() {}"
+        appendToRhaiCode(declaration)
     }
 
+    /**
+     * Add a variable declaration to global Rhai code
+     */
     fun addGlobalVariable(name: String) {
-        val variables = getGlobalVariableList().toMutableSet()
-        variables.add(name)
-        globalVariables = variables.sorted().joinToString("\n")
+        val declaration = "let $name;"
+        appendToRhaiCode(declaration)
     }
 
+    /**
+     * Add a type declaration (as comment) to global Rhai code
+     */
     fun addGlobalType(name: String) {
-        val types = getGlobalTypeList().toMutableSet()
-        types.add(name)
-        globalTypes = types.sorted().joinToString("\n")
+        val declaration = "// type: $name"
+        appendToRhaiCode(declaration)
+    }
+
+    private fun appendToRhaiCode(declaration: String) {
+        globalRhaiCode = if (globalRhaiCode.isBlank()) {
+            declaration
+        } else {
+            globalRhaiCode.trimEnd() + "\n" + declaration
+        }
     }
 
     companion object {

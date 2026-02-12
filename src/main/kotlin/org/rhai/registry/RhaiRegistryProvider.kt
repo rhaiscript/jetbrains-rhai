@@ -7,8 +7,8 @@ import org.rhai.settings.RhaiGlobalRegistrySettings
 /**
  * Unified provider for all Rhai registry sources.
  * Combines:
- * - Global registry (application-level, all projects)
- * - Project registry (project-specific manual entries)
+ * - Global scope (application-level Rhai code)
+ * - Project scope (project-specific Rhai code, optionally inheriting global)
  * - Auto registry (automatically parsed from Rust files)
  */
 object RhaiRegistryProvider {
@@ -18,12 +18,19 @@ object RhaiRegistryProvider {
      */
     fun getAllFunctions(project: Project): Set<String> {
         val functions = mutableSetOf<String>()
+        val parser = RhaiRegistryCodeParser.getInstance(project)
+        val projectSettings = RhaiCustomRegistrySettings.getInstance(project)
 
-        // Add global functions
-        functions.addAll(RhaiGlobalRegistrySettings.getInstance().getGlobalFunctionList())
+        // Add global functions (if inherited)
+        if (projectSettings.inheritGlobalScope) {
+            val globalSettings = RhaiGlobalRegistrySettings.getInstance()
+            val globalParsed = parser.parseRhaiCode(globalSettings.globalRhaiCode)
+            functions.addAll(globalParsed.functions.map { it.name })
+        }
 
         // Add project-specific functions
-        functions.addAll(RhaiCustomRegistrySettings.getInstance(project).getCustomFunctionList())
+        val projectParsed = parser.parseRhaiCode(projectSettings.projectRhaiCode)
+        functions.addAll(projectParsed.functions.map { it.name })
 
         // Add auto-registered functions
         functions.addAll(RhaiAutoRegistryService.getInstance(project).getAutoFunctions())
@@ -36,12 +43,21 @@ object RhaiRegistryProvider {
      */
     fun getAllVariables(project: Project): Set<String> {
         val variables = mutableSetOf<String>()
+        val parser = RhaiRegistryCodeParser.getInstance(project)
+        val projectSettings = RhaiCustomRegistrySettings.getInstance(project)
 
-        // Add global variables
-        variables.addAll(RhaiGlobalRegistrySettings.getInstance().getGlobalVariableList())
+        // Add global variables (if inherited)
+        if (projectSettings.inheritGlobalScope) {
+            val globalSettings = RhaiGlobalRegistrySettings.getInstance()
+            val globalParsed = parser.parseRhaiCode(globalSettings.globalRhaiCode)
+            variables.addAll(globalParsed.variables.map { it.name })
+            variables.addAll(globalParsed.constants.map { it.name })
+        }
 
         // Add project-specific variables
-        variables.addAll(RhaiCustomRegistrySettings.getInstance(project).getCustomVariableList())
+        val projectParsed = parser.parseRhaiCode(projectSettings.projectRhaiCode)
+        variables.addAll(projectParsed.variables.map { it.name })
+        variables.addAll(projectParsed.constants.map { it.name })
 
         // Add auto-registered variables
         variables.addAll(RhaiAutoRegistryService.getInstance(project).getAutoVariables())
@@ -54,12 +70,19 @@ object RhaiRegistryProvider {
      */
     fun getAllTypes(project: Project): Set<String> {
         val types = mutableSetOf<String>()
+        val parser = RhaiRegistryCodeParser.getInstance(project)
+        val projectSettings = RhaiCustomRegistrySettings.getInstance(project)
 
-        // Add global types
-        types.addAll(RhaiGlobalRegistrySettings.getInstance().getGlobalTypeList())
+        // Add global types (if inherited)
+        if (projectSettings.inheritGlobalScope) {
+            val globalSettings = RhaiGlobalRegistrySettings.getInstance()
+            val globalParsed = parser.parseRhaiCode(globalSettings.globalRhaiCode)
+            types.addAll(globalParsed.types)
+        }
 
         // Add project-specific types
-        types.addAll(RhaiCustomRegistrySettings.getInstance(project).getCustomTypeList())
+        val projectParsed = parser.parseRhaiCode(projectSettings.projectRhaiCode)
+        types.addAll(projectParsed.types)
 
         // Add auto-registered types
         types.addAll(RhaiAutoRegistryService.getInstance(project).getAutoTypes())
@@ -105,18 +128,73 @@ object RhaiRegistryProvider {
     }
 
     /**
+     * Get function info with signature
+     */
+    fun getFunctionInfo(project: Project, name: String): ParsedRegistryEntry? {
+        val parser = RhaiRegistryCodeParser.getInstance(project)
+        val projectSettings = RhaiCustomRegistrySettings.getInstance(project)
+
+        // Check project first
+        val projectParsed = parser.parseRhaiCode(projectSettings.projectRhaiCode)
+        projectParsed.functions.find { it.name == name }?.let { return it }
+
+        // Check global (if inherited)
+        if (projectSettings.inheritGlobalScope) {
+            val globalSettings = RhaiGlobalRegistrySettings.getInstance()
+            val globalParsed = parser.parseRhaiCode(globalSettings.globalRhaiCode)
+            globalParsed.functions.find { it.name == name }?.let { return it }
+        }
+
+        return null
+    }
+
+    /**
+     * Get all function entries with full info
+     */
+    fun getAllFunctionEntries(project: Project): Set<ParsedRegistryEntry> {
+        val entries = mutableSetOf<ParsedRegistryEntry>()
+        val parser = RhaiRegistryCodeParser.getInstance(project)
+        val projectSettings = RhaiCustomRegistrySettings.getInstance(project)
+
+        // Add global functions (if inherited)
+        if (projectSettings.inheritGlobalScope) {
+            val globalSettings = RhaiGlobalRegistrySettings.getInstance()
+            val globalParsed = parser.parseRhaiCode(globalSettings.globalRhaiCode)
+            entries.addAll(globalParsed.functions)
+        }
+
+        // Add project-specific functions
+        val projectParsed = parser.parseRhaiCode(projectSettings.projectRhaiCode)
+        entries.addAll(projectParsed.functions)
+
+        return entries
+    }
+
+    /**
      * Get source information for a function
      */
     fun getFunctionSource(project: Project, name: String): RegistrySource {
-        if (RhaiGlobalRegistrySettings.getInstance().getGlobalFunctionList().contains(name)) {
+        val parser = RhaiRegistryCodeParser.getInstance(project)
+        val projectSettings = RhaiCustomRegistrySettings.getInstance(project)
+
+        // Check global first
+        val globalSettings = RhaiGlobalRegistrySettings.getInstance()
+        val globalParsed = parser.parseRhaiCode(globalSettings.globalRhaiCode)
+        if (globalParsed.functions.any { it.name == name }) {
             return RegistrySource.GLOBAL
         }
-        if (RhaiCustomRegistrySettings.getInstance(project).getCustomFunctionList().contains(name)) {
+
+        // Check project
+        val projectParsed = parser.parseRhaiCode(projectSettings.projectRhaiCode)
+        if (projectParsed.functions.any { it.name == name }) {
             return RegistrySource.PROJECT
         }
+
+        // Check auto-registry
         if (RhaiAutoRegistryService.getInstance(project).getAutoFunctions().contains(name)) {
             return RegistrySource.AUTO
         }
+
         return RegistrySource.UNKNOWN
     }
 
@@ -125,6 +203,13 @@ object RhaiRegistryProvider {
      */
     fun rescanAutoRegistry(project: Project) {
         RhaiAutoRegistryService.getInstance(project).rescan()
+    }
+
+    /**
+     * Invalidate parser cache
+     */
+    fun invalidateCache(project: Project) {
+        RhaiRegistryCodeParser.getInstance(project).invalidateCache()
     }
 }
 

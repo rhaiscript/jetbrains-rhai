@@ -239,4 +239,131 @@ class RhaiLexerTest {
         assertTrue("Should contain LPARENs", types.contains(RhaiTypes.LPAREN))
         assertTrue("Should contain BORs for closure", types.contains(RhaiTypes.BOR))
     }
+
+    @Test
+    fun `test interpolated string basic`() {
+        val code = "`hello \${name}`"
+        val tokens = tokenize(code)
+
+        assertEquals("First token should be INTERPOLATED_START", RhaiTypes.INTERPOLATED_START, tokens[0].first)
+        assertTrue("Should contain INTERPOLATED_TEXT", tokens.any { it.first == RhaiTypes.INTERPOLATED_TEXT })
+        assertTrue("Should contain INTERPOLATED_EXPR_START", tokens.any { it.first == RhaiTypes.INTERPOLATED_EXPR_START })
+        assertTrue("Should contain IDENTIFIER", tokens.any { it.first == RhaiTypes.IDENTIFIER })
+        assertTrue("Should contain INTERPOLATED_EXPR_END", tokens.any { it.first == RhaiTypes.INTERPOLATED_EXPR_END })
+        assertEquals("Last token should be INTERPOLATED_END", RhaiTypes.INTERPOLATED_END, tokens.last().first)
+    }
+
+    @Test
+    fun `test interpolated string with multiple expressions`() {
+        val code = "`request ========> \${req.path}; \${req.headers}; \${req.all()}; `"
+        val tokens = tokenize(code)
+
+        assertEquals("First token should be INTERPOLATED_START", RhaiTypes.INTERPOLATED_START, tokens[0].first)
+        assertEquals("Last token should be INTERPOLATED_END", RhaiTypes.INTERPOLATED_END, tokens.last().first)
+
+        // Should have 3 interpolation expressions
+        val exprStartCount = tokens.count { it.first == RhaiTypes.INTERPOLATED_EXPR_START }
+        val exprEndCount = tokens.count { it.first == RhaiTypes.INTERPOLATED_EXPR_END }
+        assertEquals("Should have 3 interpolation starts", 3, exprStartCount)
+        assertEquals("Should have 3 interpolation ends", 3, exprEndCount)
+    }
+
+    @Test
+    fun `test interpolated string followed by code`() {
+        val code = "print(`hello \${name}`);\nlet x = 42;"
+        val tokens = tokenize(code)
+
+        // After the interpolated string, we should have normal code tokens
+        val semicolonIndices = tokens.mapIndexedNotNull { index, pair ->
+            if (pair.first == RhaiTypes.SEMICOLON) index else null
+        }
+        assertTrue("Should have at least 2 semicolons", semicolonIndices.size >= 2)
+
+        // Check that 'let' keyword is properly recognized after interpolated string
+        assertTrue("Should contain LET keyword", tokens.any { it.first == RhaiTypes.LET })
+    }
+
+    @Test
+    fun `test interpolated string with escaped dollar`() {
+        val code = "`price: \\\$100`"
+        val tokens = tokenize(code)
+
+        assertEquals("First token should be INTERPOLATED_START", RhaiTypes.INTERPOLATED_START, tokens[0].first)
+        assertEquals("Last token should be INTERPOLATED_END", RhaiTypes.INTERPOLATED_END, tokens.last().first)
+        // Should NOT have any interpolation expressions (dollar is escaped)
+        assertFalse("Should not have interpolation expressions",
+            tokens.any { it.first == RhaiTypes.INTERPOLATED_EXPR_START })
+    }
+
+    @Test
+    fun `test interpolated string with lone dollar at end`() {
+        val code = "`cost: \$`"
+        val tokens = tokenize(code)
+
+        assertEquals("First token should be INTERPOLATED_START", RhaiTypes.INTERPOLATED_START, tokens[0].first)
+        assertEquals("Last token should be INTERPOLATED_END", RhaiTypes.INTERPOLATED_END, tokens.last().first)
+    }
+
+    @Test
+    fun `test interpolated string with nested function call`() {
+        val code = "`result: \${obj.method(arg1, arg2)}`"
+        val tokens = tokenize(code)
+
+        assertEquals("First token should be INTERPOLATED_START", RhaiTypes.INTERPOLATED_START, tokens[0].first)
+        assertEquals("Last token should be INTERPOLATED_END", RhaiTypes.INTERPOLATED_END, tokens.last().first)
+
+        // Should properly parse the method call inside interpolation
+        assertTrue("Should contain LPAREN", tokens.any { it.first == RhaiTypes.LPAREN })
+        assertTrue("Should contain RPAREN", tokens.any { it.first == RhaiTypes.RPAREN })
+        assertTrue("Should contain COMMA", tokens.any { it.first == RhaiTypes.COMMA })
+    }
+
+    @Test
+    fun `test mixed string types with dollar brace in regular string`() {
+        // This tests the case: `text` + "${" + `more text`
+        val code = """`start` + "\$\{" + `end`"""
+        val tokens = tokenize(code)
+
+        // Should have: INTERPOLATED_START, TEXT, INTERPOLATED_END, PLUS, STRING_LITERAL, PLUS, INTERPOLATED_START, TEXT, INTERPOLATED_END
+        val interpolatedStarts = tokens.count { it.first == RhaiTypes.INTERPOLATED_START }
+        val interpolatedEnds = tokens.count { it.first == RhaiTypes.INTERPOLATED_END }
+        val stringLiterals = tokens.count { it.first == RhaiTypes.STRING_LITERAL }
+
+        assertEquals("Should have 2 interpolated starts", 2, interpolatedStarts)
+        assertEquals("Should have 2 interpolated ends", 2, interpolatedEnds)
+        assertEquals("Should have 1 regular string literal", 1, stringLiterals)
+    }
+
+    @Test
+    fun `test interpolated string with closing brace inside`() {
+        // Test that } inside interpolated string is treated as text, not expression end
+        val code = "`text with } inside`"
+        val tokens = tokenize(code)
+
+        assertEquals("First token should be INTERPOLATED_START", RhaiTypes.INTERPOLATED_START, tokens[0].first)
+        assertEquals("Last token should be INTERPOLATED_END", RhaiTypes.INTERPOLATED_END, tokens.last().first)
+
+        // Should NOT have RBRACE - the } should be part of INTERPOLATED_TEXT
+        assertFalse("Should not have RBRACE", tokens.any { it.first == RhaiTypes.RBRACE })
+    }
+
+    @Test
+    fun `test multiline interpolated strings`() {
+        val code = "print(`Interpolations start with \"`\n" +
+                   "      + \"\\\${\"\n" +
+                   "      + `\" and end with }.`)"
+        val tokens = tokenize(code)
+
+        println("Tokens: ${tokens.map { "${it.first} -> '${it.second}'" }.joinToString("\n")}")
+
+        // Should properly parse all parts
+        assertTrue("Should contain IDENTIFIER (print)", tokens.any { it.first == RhaiTypes.IDENTIFIER })
+        assertTrue("Should contain PLUS operators", tokens.any { it.first == RhaiTypes.PLUS })
+
+        val interpolatedStarts = tokens.count { it.first == RhaiTypes.INTERPOLATED_START }
+        val interpolatedEnds = tokens.count { it.first == RhaiTypes.INTERPOLATED_END }
+
+        assertEquals("Should have 2 interpolated starts", 2, interpolatedStarts)
+        assertEquals("Should have 2 interpolated ends", 2, interpolatedEnds)
+    }
 }

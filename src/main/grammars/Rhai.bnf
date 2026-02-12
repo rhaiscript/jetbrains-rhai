@@ -326,7 +326,7 @@ closure_param ::= pattern (COLON type_annotation)?
 
 interpolated_string ::= INTERPOLATED_START interpolated_part* INTERPOLATED_END
 interpolated_part ::= INTERPOLATED_TEXT
-                    | INTERPOLATED_EXPR_START expression INTERPOLATED_EXPR_END
+                    | INTERPOLATED_EXPR_START expression? INTERPOLATED_EXPR_END
 
 macro_invocation ::= IDENTIFIER NOT macro_input?
 macro_input ::= LPAREN macro_args? RPAREN

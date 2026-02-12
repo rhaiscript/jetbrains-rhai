@@ -1,7 +1,9 @@
 package org.rhai.settings
 
+import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
+import com.intellij.ui.LanguageTextField
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBRadioButton
@@ -9,7 +11,9 @@ import com.intellij.ui.components.JBTabbedPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.dsl.builder.*
 import com.intellij.util.ui.JBUI
+import org.rhai.lang.RhaiLanguage
 import org.rhai.registry.RhaiAutoRegistryService
+import org.rhai.registry.RhaiRegistryCodeParser
 import javax.swing.BoxLayout
 import javax.swing.ButtonGroup
 import javax.swing.JButton
@@ -18,23 +22,23 @@ import javax.swing.JPanel
 
 /**
  * Configuration UI for Rhai registry settings.
- * Supports both project-specific and global registries.
+ * Supports both project-specific and global scopes with Rhai code editors.
  */
 class RhaiCustomRegistryConfigurable(private val project: Project) : Configurable {
 
+    // Code editors for Rhai code
+    private var projectCodeEditor: LanguageTextField? = null
+    private var globalCodeEditor: LanguageTextField? = null
+
+    // Scope inheritance checkbox
+    private var inheritGlobalScopeCheckbox: JBCheckBox? = null
+
+    // Auto-registry components
     private var autoRegistryCheckbox: JBCheckBox? = null
     private var destinationProjectRadio: JBRadioButton? = null
     private var destinationGlobalRadio: JBRadioButton? = null
-    private var projectFunctionsTextArea: JBTextArea? = null
-    private var projectVariablesTextArea: JBTextArea? = null
-    private var projectTypesTextArea: JBTextArea? = null
     private var includePatternTextArea: JBTextArea? = null
     private var excludePatternTextArea: JBTextArea? = null
-
-    private var globalFunctionsTextArea: JBTextArea? = null
-    private var globalVariablesTextArea: JBTextArea? = null
-    private var globalTypesTextArea: JBTextArea? = null
-
     private var autoRegistryInfoLabel: JBLabel? = null
 
     override fun getDisplayName(): String = "Rhai Custom Registry"
@@ -42,65 +46,48 @@ class RhaiCustomRegistryConfigurable(private val project: Project) : Configurabl
     override fun createComponent(): JComponent {
         val tabbedPane = JBTabbedPane()
 
-        tabbedPane.addTab("Project Registry", createProjectPanel())
-        tabbedPane.addTab("Global Registry", createGlobalPanel())
+        tabbedPane.addTab("Project Scope", createProjectPanel())
+        tabbedPane.addTab("Global Scope", createGlobalPanel())
         tabbedPane.addTab("Auto Registry", createAutoRegistryPanel())
 
-        // Initialize with current settings
         reset()
-
         return tabbedPane
     }
 
     private fun createProjectPanel(): JComponent {
-        projectFunctionsTextArea = JBTextArea(6, 40).apply {
-            lineWrap = true
-            wrapStyleWord = true
-        }
+        projectCodeEditor = createRhaiCodeEditor()
 
-        projectVariablesTextArea = JBTextArea(6, 40).apply {
-            lineWrap = true
-            wrapStyleWord = true
-        }
-
-        projectTypesTextArea = JBTextArea(4, 40).apply {
-            lineWrap = true
-            wrapStyleWord = true
-        }
+        inheritGlobalScopeCheckbox = JBCheckBox(
+            "Inherit global scope (include global definitions in this project)",
+            true
+        )
 
         return panel {
             row {
-                label("<html><b>Project-Specific Registry</b><br>" +
-                    "These functions, variables, and types are only available in this project.</html>")
+                label("<html><b>Project Scope</b><br>" +
+                    "Define functions, variables, and constants available in this project.<br>" +
+                    "Use standard Rhai syntax.</html>")
             }
-            group("Functions") {
+            row {
+                cell(inheritGlobalScopeCheckbox!!)
+            }
+            separator()
+            group("Rhai Code") {
                 row {
-                    scrollCell(projectFunctionsTextArea!!)
+                    scrollCell(projectCodeEditor!!)
                         .align(Align.FILL)
                         .resizableColumn()
                 }.resizableRow()
                 row {
-                    comment("e.g.: my_rust_func, calculate_something, get_config")
-                }
-            }
-            group("Variables") {
-                row {
-                    scrollCell(projectVariablesTextArea!!)
-                        .align(Align.FILL)
-                        .resizableColumn()
-                }.resizableRow()
-                row {
-                    comment("e.g.: MY_CONSTANT, config_value, app_state")
-                }
-            }
-            group("Types") {
-                row {
-                    scrollCell(projectTypesTextArea!!)
-                        .align(Align.FILL)
-                        .resizableColumn()
-                }.resizableRow()
-                row {
-                    comment("e.g.: MyStruct, CustomType, AppConfig")
+                    comment("""
+                        <html>
+                        Examples:<br>
+                        <code>fn calculate(x, y) { x + y }</code><br>
+                        <code>let config_value;</code><br>
+                        <code>const MAX_SIZE = 100;</code><br>
+                        <code>// type: MyCustomType</code>
+                        </html>
+                    """.trimIndent())
                 }
             }
         }.apply {
@@ -109,58 +96,54 @@ class RhaiCustomRegistryConfigurable(private val project: Project) : Configurabl
     }
 
     private fun createGlobalPanel(): JComponent {
-        globalFunctionsTextArea = JBTextArea(6, 40).apply {
-            lineWrap = true
-            wrapStyleWord = true
-        }
-
-        globalVariablesTextArea = JBTextArea(6, 40).apply {
-            lineWrap = true
-            wrapStyleWord = true
-        }
-
-        globalTypesTextArea = JBTextArea(4, 40).apply {
-            lineWrap = true
-            wrapStyleWord = true
-        }
+        globalCodeEditor = createRhaiCodeEditor()
 
         return panel {
             row {
-                label("<html><b>Global Registry</b><br>" +
-                    "These functions, variables, and types are available in ALL projects.</html>")
+                label("<html><b>Global Scope</b><br>" +
+                    "Define functions, variables, and constants available in ALL projects.<br>" +
+                    "Projects can inherit these definitions via the \"Inherit global scope\" option.</html>")
             }
-            group("Functions") {
+            group("Rhai Code") {
                 row {
-                    scrollCell(globalFunctionsTextArea!!)
+                    scrollCell(globalCodeEditor!!)
                         .align(Align.FILL)
                         .resizableColumn()
                 }.resizableRow()
-                row {
-                    comment("Functions available in all Rhai files across all projects")
-                }
-            }
-            group("Variables") {
-                row {
-                    scrollCell(globalVariablesTextArea!!)
-                        .align(Align.FILL)
-                        .resizableColumn()
-                }.resizableRow()
-                row {
-                    comment("Variables/constants available in all projects")
-                }
-            }
-            group("Types") {
-                row {
-                    scrollCell(globalTypesTextArea!!)
-                        .align(Align.FILL)
-                        .resizableColumn()
-                }.resizableRow()
-                row {
-                    comment("Types available in all projects")
-                }
             }
         }.apply {
             border = JBUI.Borders.empty(10)
+        }
+    }
+
+    /**
+     * Create a syntax-highlighted Rhai code editor
+     */
+    private fun createRhaiCodeEditor(): LanguageTextField {
+        return object : LanguageTextField(
+            RhaiLanguage.INSTANCE,
+            project,
+            "",
+            false
+        ) {
+            override fun createEditor(): EditorEx {
+                val editor = super.createEditor()
+                editor.settings.apply {
+                    isLineNumbersShown = true
+                    isWhitespacesShown = false
+                    isFoldingOutlineShown = true
+                    isAutoCodeFoldingEnabled = true
+                    additionalLinesCount = 3
+                    additionalColumnsCount = 3
+                    isRightMarginShown = false
+                }
+                editor.setVerticalScrollbarVisible(true)
+                editor.setHorizontalScrollbarVisible(true)
+                return editor
+            }
+        }.apply {
+            preferredSize = java.awt.Dimension(600, 300)
+            setOneLineMode(false)
         }
     }
 
@@ -173,7 +156,6 @@ class RhaiCustomRegistryConfigurable(private val project: Project) : Configurabl
         destinationGroup.add(destinationProjectRadio)
         destinationGroup.add(destinationGlobalRadio)
 
-        // Wrap radio buttons in a JPanel to avoid DSL buttonsGroup requirement
         val radioPanel = JPanel().apply {
             layout = BoxLayout(this, BoxLayout.Y_AXIS)
             add(destinationProjectRadio)
@@ -270,32 +252,29 @@ class RhaiCustomRegistryConfigurable(private val project: Project) : Configurabl
 
         val currentDestination = if (destinationGlobalRadio?.isSelected == true) "global" else "project"
 
-        return autoRegistryCheckbox?.isSelected != projectSettings.autoRegistryEnabled ||
+        return projectCodeEditor?.text != projectSettings.projectRhaiCode ||
+            globalCodeEditor?.text != globalSettings.globalRhaiCode ||
+            inheritGlobalScopeCheckbox?.isSelected != projectSettings.inheritGlobalScope ||
+            autoRegistryCheckbox?.isSelected != projectSettings.autoRegistryEnabled ||
             currentDestination != projectSettings.autoRegistryDestination ||
-            projectFunctionsTextArea?.text != projectSettings.customFunctions ||
-            projectVariablesTextArea?.text != projectSettings.customVariables ||
-            projectTypesTextArea?.text != projectSettings.customTypes ||
             includePatternTextArea?.text != projectSettings.autoScanPatterns ||
-            excludePatternTextArea?.text != projectSettings.autoScanExcludePatterns ||
-            globalFunctionsTextArea?.text != globalSettings.globalFunctions ||
-            globalVariablesTextArea?.text != globalSettings.globalVariables ||
-            globalTypesTextArea?.text != globalSettings.globalTypes
+            excludePatternTextArea?.text != projectSettings.autoScanExcludePatterns
     }
 
     override fun apply() {
         val projectSettings = RhaiCustomRegistrySettings.getInstance(project)
+        projectSettings.projectRhaiCode = projectCodeEditor?.text ?: ""
+        projectSettings.inheritGlobalScope = inheritGlobalScopeCheckbox?.isSelected ?: true
         projectSettings.autoRegistryEnabled = autoRegistryCheckbox?.isSelected ?: true
         projectSettings.autoRegistryDestination = if (destinationGlobalRadio?.isSelected == true) "global" else "project"
-        projectSettings.customFunctions = projectFunctionsTextArea?.text ?: ""
-        projectSettings.customVariables = projectVariablesTextArea?.text ?: ""
-        projectSettings.customTypes = projectTypesTextArea?.text ?: ""
         projectSettings.autoScanPatterns = includePatternTextArea?.text ?: "**/*.rs"
         projectSettings.autoScanExcludePatterns = excludePatternTextArea?.text ?: ""
 
         val globalSettings = RhaiGlobalRegistrySettings.getInstance()
-        globalSettings.globalFunctions = globalFunctionsTextArea?.text ?: ""
-        globalSettings.globalVariables = globalVariablesTextArea?.text ?: ""
-        globalSettings.globalTypes = globalTypesTextArea?.text ?: ""
+        globalSettings.globalRhaiCode = globalCodeEditor?.text ?: ""
+
+        // Invalidate parser cache
+        RhaiRegistryCodeParser.getInstance(project).invalidateCache()
 
         // Trigger rescan if auto-registry is enabled
         if (projectSettings.autoRegistryEnabled) {
@@ -305,35 +284,29 @@ class RhaiCustomRegistryConfigurable(private val project: Project) : Configurabl
 
     override fun reset() {
         val projectSettings = RhaiCustomRegistrySettings.getInstance(project)
+        projectCodeEditor?.text = projectSettings.projectRhaiCode
+        inheritGlobalScopeCheckbox?.isSelected = projectSettings.inheritGlobalScope
         autoRegistryCheckbox?.isSelected = projectSettings.autoRegistryEnabled
         destinationProjectRadio?.isSelected = projectSettings.autoRegistryDestination != "global"
         destinationGlobalRadio?.isSelected = projectSettings.autoRegistryDestination == "global"
-        projectFunctionsTextArea?.text = projectSettings.customFunctions
-        projectVariablesTextArea?.text = projectSettings.customVariables
-        projectTypesTextArea?.text = projectSettings.customTypes
         includePatternTextArea?.text = projectSettings.autoScanPatterns
         excludePatternTextArea?.text = projectSettings.autoScanExcludePatterns
 
         val globalSettings = RhaiGlobalRegistrySettings.getInstance()
-        globalFunctionsTextArea?.text = globalSettings.globalFunctions
-        globalVariablesTextArea?.text = globalSettings.globalVariables
-        globalTypesTextArea?.text = globalSettings.globalTypes
+        globalCodeEditor?.text = globalSettings.globalRhaiCode
 
         updateAutoRegistryInfo()
     }
 
     override fun disposeUIResources() {
+        projectCodeEditor = null
+        globalCodeEditor = null
+        inheritGlobalScopeCheckbox = null
         autoRegistryCheckbox = null
         destinationProjectRadio = null
         destinationGlobalRadio = null
-        projectFunctionsTextArea = null
-        projectVariablesTextArea = null
-        projectTypesTextArea = null
         includePatternTextArea = null
         excludePatternTextArea = null
-        globalFunctionsTextArea = null
-        globalVariablesTextArea = null
-        globalTypesTextArea = null
         autoRegistryInfoLabel = null
     }
 }

@@ -1,6 +1,6 @@
 # Rhai Language Support for JetBrains IDEs
 
-[![Build Status](https://github.com/your-username/rhai-highlight-plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/rhai-highlight-plugin/actions)
+[![Build Status](https://github.com/GlebMikhailov/rhai-jetbrains-plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/GlebMikhailov/rhai-jetbrains-plugin/actions)
 [![JetBrains Plugin](https://img.shields.io/badge/JetBrains-Plugin-orange)](https://plugins.jetbrains.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -108,7 +108,7 @@ Full-featured language support for the [Rhai](https://rhai.rs/) scripting langua
 4. Restart the IDE
 
 ### Manual Installation
-1. Download the plugin `.zip` from [Releases](https://github.com/your-username/rhai-highlight-plugin/releases)
+1. Download the plugin `.zip` from [Releases](https://github.com/GlebMikhailov/rhai-jetbrains-plugin/releases)
 2. Open **Settings/Preferences > Plugins**
 3. Click the gear icon and select **Install Plugin from Disk...**
 4. Select the downloaded `.zip` file
@@ -268,7 +268,7 @@ Configure Rhai code style settings:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/rhai-highlight-plugin.git
+git clone https://github.com/GlebMikhailov/rhai-jetbrains-plugin.git
 cd rhai-highlight-plugin
 
 # Build the plugin
