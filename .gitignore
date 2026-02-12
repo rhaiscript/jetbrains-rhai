@@ -43,3 +43,4 @@ bin/
 
 ### Generated files ###
 src/main/gen/
+.claude/settings.local.json
