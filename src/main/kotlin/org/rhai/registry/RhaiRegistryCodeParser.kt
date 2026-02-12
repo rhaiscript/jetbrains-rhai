@@ -105,7 +105,7 @@ class RhaiRegistryCodeParser(private val project: Project) {
                     constants.add(ParsedRegistryEntry(name, RegistryEntryKind.CONSTANT, typeAnnotation))
                 }
             }
-        } catch (e: Exception) {
+        } catch (@Suppress("SwallowedException") e: Exception) {
             // Ignore parsing errors - just return empty results for unparseable code
         }
 

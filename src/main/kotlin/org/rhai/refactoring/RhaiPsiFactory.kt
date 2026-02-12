@@ -22,10 +22,10 @@ class RhaiPsiFactory(private val project: Project) {
         // Create a simple let declaration to extract the identifier
         val file = createFile("let $name = 0;")
         val letDecl = PsiTreeUtil.findChildOfType(file, RhaiLetDeclaration::class.java)
-            ?: throw IllegalStateException("Failed to create identifier PSI element")
+            ?: error("Failed to create identifier PSI element")
 
         val identifierNode = letDecl.pattern.node.findChildByType(RhaiTypes.IDENTIFIER)
-            ?: throw IllegalStateException("Failed to find identifier in created element")
+            ?: error("Failed to find identifier in created element")
 
         return identifierNode.psi
     }

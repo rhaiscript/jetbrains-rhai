@@ -2,7 +2,7 @@ plugins {
     id("java")
     id("org.jetbrains.grammarkit") version "2022.3.1"
     id("org.jetbrains.kotlin.jvm") version "1.9.24"
-    id("org.jetbrains.intellij") version "1.16.1"
+    id("org.jetbrains.intellij") version "1.17.4"
     id("io.gitlab.arturbosch.detekt") version "1.23.4"
 }
 
@@ -91,13 +91,6 @@ tasks {
         token.set(System.getenv("PUBLISH_TOKEN"))
     }
 
-    generateLexer {
-        sourceFile.set(project.file("src/main/grammars/RhaiLexer.flex"))
-        targetDir.set("src/main/gen/org/rhai/")
-        targetClass.set("RhaiLexer")
-        purgeOldFiles.set(true)
-    }
-
     generateParser {
         sourceFile.set(project.file("src/main/grammars/Rhai.bnf"))
         targetRoot.set("src/main/gen")
@@ -106,8 +99,16 @@ tasks {
         purgeOldFiles.set(true)
     }
 
+    generateLexer {
+        dependsOn(generateParser)
+        sourceFile.set(project.file("src/main/grammars/RhaiLexer.flex"))
+        targetDir.set("src/main/gen/org/rhai/")
+        targetClass.set("RhaiLexer")
+        purgeOldFiles.set(false)
+    }
+
     compileKotlin {
-        dependsOn(generateLexer, generateParser)
+        dependsOn(generateLexer)
     }
 
     clean {

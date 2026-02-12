@@ -581,8 +581,6 @@ class RhaiCompletionContributor : CompletionContributor() {
             if (actualModuleName != moduleName) {
                 val adjustedStart = completionStart + adjustment
                 val adjustedEnd = completionEnd + adjustment
-
-                val oldText = "$moduleName::$symbolName"
                 val newText = "$actualModuleName::$symbolName"
 
                 document.replaceString(adjustedStart, adjustedEnd, newText)

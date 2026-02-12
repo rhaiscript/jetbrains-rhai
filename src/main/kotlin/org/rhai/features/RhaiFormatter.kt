@@ -3,13 +3,10 @@ package org.rhai.features
 import com.intellij.formatting.*
 import com.intellij.lang.ASTNode
 import com.intellij.openapi.util.TextRange
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
 import com.intellij.psi.TokenType
 import com.intellij.psi.codeStyle.CodeStyleSettings
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings
 import com.intellij.psi.formatter.FormatterUtil
-import com.intellij.psi.tree.IElementType
 import com.intellij.psi.tree.TokenSet
 import org.rhai.RhaiTypes
 import org.rhai.lang.RhaiLanguage
@@ -183,22 +180,6 @@ class RhaiFormattingBlock(
     private var subBlocks: List<Block>? = null
 
     companion object {
-        private val BLOCKS = TokenSet.create(
-            RhaiTypes.BLOCK,
-            RhaiTypes.FUNCTION_DEFINITION,
-            RhaiTypes.IF_STATEMENT,
-            RhaiTypes.IF_EXPRESSION,
-            RhaiTypes.WHILE_STATEMENT,
-            RhaiTypes.FOR_STATEMENT,
-            RhaiTypes.LOOP_STATEMENT,
-            RhaiTypes.DO_WHILE_STATEMENT,
-            RhaiTypes.UNTIL_STATEMENT,
-            RhaiTypes.SWITCH_EXPRESSION,
-            RhaiTypes.TRY_CATCH_STATEMENT,
-            RhaiTypes.MODULE_DECLARATION,
-            RhaiTypes.CLOSURE_EXPR
-        )
-
         private val BRACES = TokenSet.create(
             RhaiTypes.LBRACE,
             RhaiTypes.RBRACE,
@@ -206,14 +187,6 @@ class RhaiFormattingBlock(
             RhaiTypes.RBRACKET,
             RhaiTypes.LPAREN,
             RhaiTypes.RPAREN
-        )
-
-        private val CONTAINERS = TokenSet.create(
-            RhaiTypes.ARRAY_LITERAL,
-            RhaiTypes.OBJECT_LITERAL,
-            RhaiTypes.PARAMETERS,
-            RhaiTypes.ARGUMENT_LIST,
-            RhaiTypes.CLOSURE_PARAMS
         )
     }
 
