@@ -1,4 +1,5 @@
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
+import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -156,6 +157,7 @@ dependencies {
     intellijPlatform {
         intellijIdeaCommunity("2024.3")
         pluginVerifier()
+        testFramework(TestFrameworkType.Platform)
     }
 }
 
