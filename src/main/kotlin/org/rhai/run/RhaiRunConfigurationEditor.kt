@@ -3,6 +3,7 @@ package org.rhai.run
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.options.SettingsEditor
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.TextBrowseFolderListener
 import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.dsl.builder.*
@@ -19,24 +20,30 @@ class RhaiRunConfigurationEditor(private val project: Project) : SettingsEditor<
 
     init {
         scriptPathField.addBrowseFolderListener(
-            "Select Rhai Script",
-            "Select the Rhai script to run",
-            project,
-            FileChooserDescriptorFactory.createSingleFileDescriptor("rhai")
+            TextBrowseFolderListener(
+                FileChooserDescriptorFactory.createSingleFileDescriptor("rhai")
+                    .withTitle("Select Rhai Script")
+                    .withDescription("Select the Rhai script to run"),
+                project
+            )
         )
 
         interpreterPathField.addBrowseFolderListener(
-            "Select Rhai Interpreter",
-            "Select the Rhai interpreter executable (rhai-run or custom binary)",
-            project,
-            FileChooserDescriptorFactory.createSingleFileNoJarsDescriptor()
+            TextBrowseFolderListener(
+                FileChooserDescriptorFactory.createSingleFileNoJarsDescriptor()
+                    .withTitle("Select Rhai Interpreter")
+                    .withDescription("Select the Rhai interpreter executable (rhai-run or custom binary)"),
+                project
+            )
         )
 
         workingDirectoryField.addBrowseFolderListener(
-            "Select Working Directory",
-            "Select the working directory for script execution",
-            project,
-            FileChooserDescriptorFactory.createSingleFolderDescriptor()
+            TextBrowseFolderListener(
+                FileChooserDescriptorFactory.createSingleFolderDescriptor()
+                    .withTitle("Select Working Directory")
+                    .withDescription("Select the working directory for script execution"),
+                project
+            )
         )
 
         panel = panel {

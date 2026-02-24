@@ -101,13 +101,13 @@ class AddToRhaiRegistryAction : AnAction(
                 }
 
                 val typeOptions = arrayOf("Function", "Variable", "Type")
-                val typeChoice = Messages.showChooseDialog(
+                val typeChoice = Messages.showDialog(
                     project,
                     "Select the type of registration:",
                     "Registration Type",
-                    null,
                     typeOptions,
-                    typeOptions[0]
+                    0,
+                    Messages.getQuestionIcon()
                 )
 
                 if (typeChoice >= 0) {

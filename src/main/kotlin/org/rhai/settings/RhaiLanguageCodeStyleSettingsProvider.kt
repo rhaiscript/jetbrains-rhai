@@ -106,26 +106,25 @@ class RhaiLanguageCodeStyleSettingsProvider : LanguageCodeStyleSettingsProvider(
         return SmartIndentOptionsEditor()
     }
 
-    override fun getDefaultCommonSettings(): CommonCodeStyleSettings {
-        val settings = CommonCodeStyleSettings(language)
-        val indentOptions = settings.initIndentOptions()
+    override fun customizeDefaults(
+        commonSettings: CommonCodeStyleSettings,
+        indentOptions: CommonCodeStyleSettings.IndentOptions
+    ) {
         indentOptions.INDENT_SIZE = 4
         indentOptions.CONTINUATION_INDENT_SIZE = 4
         indentOptions.TAB_SIZE = 4
         indentOptions.USE_TAB_CHARACTER = false
 
-        settings.SPACE_AROUND_ASSIGNMENT_OPERATORS = true
-        settings.SPACE_AROUND_LOGICAL_OPERATORS = true
-        settings.SPACE_AROUND_EQUALITY_OPERATORS = true
-        settings.SPACE_AROUND_RELATIONAL_OPERATORS = true
-        settings.SPACE_AROUND_ADDITIVE_OPERATORS = true
-        settings.SPACE_AROUND_MULTIPLICATIVE_OPERATORS = true
-        settings.SPACE_AFTER_COMMA = true
-        settings.SPACE_BEFORE_COMMA = false
-        settings.SPACE_AFTER_COLON = true
-        settings.SPACE_BEFORE_COLON = false
-
-        return settings
+        commonSettings.SPACE_AROUND_ASSIGNMENT_OPERATORS = true
+        commonSettings.SPACE_AROUND_LOGICAL_OPERATORS = true
+        commonSettings.SPACE_AROUND_EQUALITY_OPERATORS = true
+        commonSettings.SPACE_AROUND_RELATIONAL_OPERATORS = true
+        commonSettings.SPACE_AROUND_ADDITIVE_OPERATORS = true
+        commonSettings.SPACE_AROUND_MULTIPLICATIVE_OPERATORS = true
+        commonSettings.SPACE_AFTER_COMMA = true
+        commonSettings.SPACE_BEFORE_COMMA = false
+        commonSettings.SPACE_AFTER_COLON = true
+        commonSettings.SPACE_BEFORE_COLON = false
     }
 
     companion object {

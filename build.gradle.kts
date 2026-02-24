@@ -1,16 +1,22 @@
+import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id("java")
-    id("org.jetbrains.grammarkit") version "2022.3.1"
-    id("org.jetbrains.kotlin.jvm") version "1.9.24"
-    id("org.jetbrains.intellij") version "1.17.4"
+    id("org.jetbrains.grammarkit") version "2022.3.2.2"
+    id("org.jetbrains.kotlin.jvm") version "2.0.21"
+    id("org.jetbrains.intellij.platform") version "2.11.0"
     id("io.gitlab.arturbosch.detekt") version "1.23.4"
 }
 
 group = "org.rhai"
-version = "1.0.0"
+version = "1.0.1"
 
 repositories {
     mavenCentral()
+    intellijPlatform {
+        defaultRepositories()
+    }
 }
 
 allprojects {
@@ -18,7 +24,6 @@ allprojects {
         plugin("idea")
         plugin("kotlin")
         plugin("org.jetbrains.grammarkit")
-        plugin("org.jetbrains.intellij")
     }
 
     repositories {
@@ -36,13 +41,22 @@ allprojects {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 
-intellij {
-    version.set("2023.3")
-    type.set("IC")
+intellijPlatform {
+    pluginConfiguration {
+        ideaVersion {
+            sinceBuild = "233"
+            untilBuild = "261.*"
+        }
+    }
+    pluginVerification {
+        ides {
+            create(IntelliJPlatformType.IntellijIdeaCommunity, "2024.3")
+        }
+    }
 }
 
 detekt {
@@ -55,12 +69,14 @@ detekt {
 
 tasks {
     withType<JavaCompile> {
-        sourceCompatibility = "17"
-        targetCompatibility = "17"
+        sourceCompatibility = "21"
+        targetCompatibility = "21"
     }
 
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions.jvmTarget = "17"
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_21)
+        }
     }
 
     withType<Copy> {
@@ -76,24 +92,19 @@ tasks {
         }
     }
 
-    patchPluginXml {
-        sinceBuild.set("233")
-        untilBuild.set("252.*")
-    }
-
     signPlugin {
-        certificateChain.set(System.getenv("CERTIFICATE_CHAIN"))
-        privateKey.set(System.getenv("PRIVATE_KEY"))
-        password.set(System.getenv("PRIVATE_KEY_PASSWORD"))
+        certificateChain.set(providers.environmentVariable("CERTIFICATE_CHAIN"))
+        privateKey.set(providers.environmentVariable("PRIVATE_KEY"))
+        password.set(providers.environmentVariable("PRIVATE_KEY_PASSWORD"))
     }
 
     publishPlugin {
-        token.set(System.getenv("PUBLISH_TOKEN"))
+        token.set(providers.environmentVariable("PUBLISH_TOKEN"))
     }
 
     generateParser {
         sourceFile.set(project.file("src/main/grammars/Rhai.bnf"))
-        targetRoot.set("src/main/gen")
+        targetRootOutputDir.set(project.file("src/main/gen"))
         pathToParser.set("org/rhai/RhaiParser.java")
         pathToPsiRoot.set("org/rhai")
         purgeOldFiles.set(true)
@@ -102,8 +113,7 @@ tasks {
     generateLexer {
         dependsOn(generateParser)
         sourceFile.set(project.file("src/main/grammars/RhaiLexer.flex"))
-        targetDir.set("src/main/gen/org/rhai/")
-        targetClass.set("RhaiLexer")
+        targetOutputDir.set(project.file("src/main/gen/org/rhai/"))
         purgeOldFiles.set(false)
     }
 
@@ -142,6 +152,11 @@ sourceSets {
 
 dependencies {
     testImplementation("junit:junit:4.13.2")
+
+    intellijPlatform {
+        intellijIdeaCommunity("2024.3")
+        pluginVerifier()
+    }
 }
 
 tasks {

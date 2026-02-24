@@ -27,8 +27,8 @@ class RhaiRunLineMarkerProvider : RunLineMarkerContributor() {
         val actions = ExecutorAction.getActions(0)
         return Info(
             AllIcons.RunConfigurations.TestState.Run,
-            { "Run ${containingFile.name}" },
-            *actions
+            actions,
+            { "Run ${containingFile.name}" }
         )
     }
 }

@@ -1,6 +1,5 @@
 package org.rhai.features
 
-import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.lang.parameterInfo.*
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
@@ -190,9 +189,6 @@ class RhaiParameterInfoHandler : ParameterInfoHandler<RhaiArgumentList, RhaiPara
         )
     }
 
-    override fun getParametersForLookup(item: LookupElement?, context: ParameterInfoContext?): Array<Any>? {
-        return null
-    }
 
     companion object {
         private val BUILTIN_FUNCTIONS = mapOf(
