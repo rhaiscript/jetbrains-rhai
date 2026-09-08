@@ -1,5 +1,6 @@
 package org.rhai.actions
 
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -62,6 +63,9 @@ class AddToRhaiRegistryAction : AnAction(
                 file != null &&
                 file.extension == "rs"
     }
+
+    // update() only reads data keys (no Swing state), so it can run off the EDT.
+    override fun getActionUpdateThread() = ActionUpdateThread.BGT
 
     private fun showScopeDialog(project: com.intellij.openapi.project.Project, registration: RhaiRegistration) {
         val dialog = ScopeSelectionDialog(project, registration)

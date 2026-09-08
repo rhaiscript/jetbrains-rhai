@@ -64,9 +64,9 @@ class RhaiCustomRegistryConfigurable(private val project: Project) : Configurabl
 
         return panel {
             row {
-                label("<html><b>Project Scope</b><br>" +
+                text("<b>Project Scope</b><br>" +
                     "Define functions, variables, and constants available in this project.<br>" +
-                    "Use standard Rhai syntax.</html>")
+                    "Use standard Rhai syntax.")
             }
             row {
                 cell(inheritGlobalScopeCheckbox!!)
@@ -80,13 +80,11 @@ class RhaiCustomRegistryConfigurable(private val project: Project) : Configurabl
                 }.resizableRow()
                 row {
                     comment("""
-                        <html>
                         Examples:<br>
                         <code>fn calculate(x, y) { x + y }</code><br>
                         <code>let config_value;</code><br>
                         <code>const MAX_SIZE = 100;</code><br>
                         <code>// type: MyCustomType</code>
-                        </html>
                     """.trimIndent())
                 }
             }
@@ -100,9 +98,9 @@ class RhaiCustomRegistryConfigurable(private val project: Project) : Configurabl
 
         return panel {
             row {
-                label("<html><b>Global Scope</b><br>" +
+                text("<b>Global Scope</b><br>" +
                     "Define functions, variables, and constants available in ALL projects.<br>" +
-                    "Projects can inherit these definitions via the \"Inherit global scope\" option.</html>")
+                    "Projects can inherit these definitions via the \"Inherit global scope\" option.")
             }
             group("Rhai Code") {
                 row {
@@ -183,8 +181,8 @@ class RhaiCustomRegistryConfigurable(private val project: Project) : Configurabl
 
         return panel {
             row {
-                label("<html><b>Automatic Registry</b><br>" +
-                    "Automatically parse Rust files to find Rhai function registrations.</html>")
+                text("<b>Automatic Registry</b><br>" +
+                    "Automatically parse Rust files to find Rhai function registrations.")
             }
             row {
                 cell(autoRegistryCheckbox!!)

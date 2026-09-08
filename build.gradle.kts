@@ -11,7 +11,7 @@ plugins {
 }
 
 group = "org.rhai"
-version = "1.0.1"
+version = "1.0.2"
 
 repositories {
     mavenCentral()
@@ -50,12 +50,15 @@ intellijPlatform {
     pluginConfiguration {
         ideaVersion {
             sinceBuild = "233"
-            untilBuild = "261.*"
+            // No upper bound: the plugin uses only stable, forward-compatible API, so it should
+            // not be re-capped on every IDE release (previously blocked 2026.2 / build 262).
+            untilBuild = provider { null }
         }
     }
     pluginVerification {
         ides {
             create(IntelliJPlatformType.IntellijIdeaCommunity, "2024.3")
+            create(IntelliJPlatformType.IntellijIdeaCommunity, "2025.2")
         }
     }
 }
